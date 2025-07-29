@@ -4,8 +4,8 @@ from models import PortfolioItem
 def insert_portfolio_item(item: PortfolioItem):
     conn = mysql.connector.connect(
         host="localhost",
-        user="root",
-        password="Emilio0701!",
+        user="DB_USER",    
+        password="DB_PASS",
         database="portfolio_db"
     )
     cursor = conn.cursor()
@@ -28,8 +28,8 @@ def insert_portfolio_item(item: PortfolioItem):
 def get_all_items():
     conn = mysql.connector.connect(
         host="localhost",
-        user="root",
-        password="Emilio0701!",
+        user="DB_USER",
+        password="DB_PASS",
         database="portfolio_db"
     )
     cursor = conn.cursor(dictionary=True)
@@ -42,8 +42,8 @@ def get_all_items():
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = mysql.connector.connect(
         host="localhost",
-        user="root",
-        password="Emilio0701!",
+        user="DB_USER",
+        password="DB_PASS",
         database="portfolio_db"
     )
     cursor = conn.cursor()
@@ -69,8 +69,8 @@ def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
 def delete_portfolio_item(item_id: int):
     conn = mysql.connector.connect(
         host="localhost",
-        user="root",
-        password="Emilio0701!",
+        user="DB_USER",
+        password="DB_PASS",
         database="portfolio_db"
     )
     cursor = conn.cursor()
