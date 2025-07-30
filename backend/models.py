@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import date
 
 class PortfolioItem(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None  # ✅ Default to None, so it's optional
     ticker: str = Field(..., example="AAPL")
     quantity: int = Field(..., gt=0)
     asset_type: str = Field(..., example="equity")

@@ -1,3 +1,4 @@
+
 CREATE DATABASE IF NOT EXISTS portfolio_db;
 
 USE portfolio_db;
@@ -10,3 +11,4 @@ CREATE TABLE IF NOT EXISTS portfolio (
     purchase_price FLOAT NOT NULL,
     purchase_date DATE
 );
+
