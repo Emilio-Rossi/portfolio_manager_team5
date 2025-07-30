@@ -1,9 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, Flask, request, jsonify
 import yfinance as yf
 
 app = Flask(__name__)
+yfinance_bp = Blueprint('yfinance', __name__)
 
-@app.route('/stock', methods=['GET'])
+@yfinance_bp.route('/stock/latestprice', methods=['GET'])
 def get_stock_data():
     # Get ticker symbol from query parameter
     ticker_symbol = request.args.get('symbol')
@@ -25,5 +26,4 @@ def get_stock_data():
         "latest_price": latest_price
     })
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+
