@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from db_utils import get_all_items
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 

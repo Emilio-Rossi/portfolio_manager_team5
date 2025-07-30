@@ -1,13 +1,27 @@
+import os
 import mysql.connector
+from dotenv import load_dotenv
 from models import PortfolioItem
 
-def insert_portfolio_item(item: PortfolioItem):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="DB_USER",    
-        password="DB_PASS",
-        database="portfolio_db"
+# Load environment variables
+load_dotenv()
+
+db_user = os.getenv("DB_USER")
+db_password = os.getenv("DB_PASSWORD")
+db_host = os.getenv("DB_HOST", "localhost")
+db_name = os.getenv("DB_NAME", "portfolio_db")
+
+# Helper function to create a DB connection
+def get_connection():
+    return mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        database=db_name
     )
+
+def insert_portfolio_item(item: PortfolioItem):
+    conn = get_connection()
     cursor = conn.cursor()
     sql = """
         INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date)
@@ -26,12 +40,7 @@ def insert_portfolio_item(item: PortfolioItem):
     conn.close()
 
 def get_all_items():
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="DB_USER",
-        password="DB_PASS",
-        database="portfolio_db"
-    )
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM portfolio;")
     results = cursor.fetchall()
@@ -40,12 +49,7 @@ def get_all_items():
     return results
 
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="DB_USER",
-        password="DB_PASS",
-        database="portfolio_db"
-    )
+    conn = get_connection()
     cursor = conn.cursor()
     sql = """
         UPDATE portfolio
@@ -67,12 +71,7 @@ def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn.close()
 
 def delete_portfolio_item(item_id: int):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="DB_USER",
-        password="DB_PASS",
-        database="portfolio_db"
-    )
+    conn = get_connection()
     cursor = conn.cursor()
     sql = "DELETE FROM portfolio WHERE id = %s"
     cursor.execute(sql, (item_id,))
