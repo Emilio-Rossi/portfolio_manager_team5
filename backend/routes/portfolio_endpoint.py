@@ -1,7 +1,7 @@
 # routes/portfolio_endpoint.py
 from flask import Blueprint, jsonify, request
 from models import PortfolioItem
-from db_utils import get_all_items, insert_portfolio_item
+from db_utils import view_portfolios, insert_portfolio_item
 
 portfolio_bp = Blueprint('portfolio', __name__)
 
@@ -9,7 +9,7 @@ portfolio_bp = Blueprint('portfolio', __name__)
 @portfolio_bp.route('/portfolio', methods=['GET'])
 def get_portfolio():
     try:
-        items = get_all_items()
+        items = view_portfolios()
         return jsonify(items), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

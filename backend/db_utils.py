@@ -39,7 +39,7 @@ def insert_portfolio_item(item: PortfolioItem):
     cursor.close()
     conn.close()
 
-def get_all_items():
+def view_portfolios():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
