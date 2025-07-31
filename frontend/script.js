@@ -1,5 +1,4 @@
-
-    // Sample data
+ // Sample data
     const portfolioData = {
         performance: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -10,23 +9,7 @@
             values: [85000, 28447, 12450],
             colors: ['#4285f4', '#6fa8f7', '#a3c4f9']
         },
-        holdings: [
-            { symbol: 'AAPL', shares: 50, avgPrice: 150.00, currentPrice: 175.50, name: 'Apple Inc.' },
-            { symbol: 'MSFT', shares: 30, avgPrice: 280.00, currentPrice: 320.75, name: 'Microsoft Corp.' },
-            { symbol: 'GOOGL', shares: 25, avgPrice: 120.00, currentPrice: 145.20, name: 'Alphabet Inc.' },
-            { symbol: 'AMZN', shares: 40, avgPrice: 90.00, currentPrice: 95.30, name: 'Amazon.com Inc.' },
-            { symbol: 'TSLA', shares: 20, avgPrice: 200.00, currentPrice: 180.45, name: 'Tesla Inc.' },
-            { symbol: 'NVDA', shares: 15, avgPrice: 300.00, currentPrice: 450.80, name: 'NVIDIA Corp.' },
-            { symbol: 'META', shares: 35, avgPrice: 250.00, currentPrice: 285.50, name: 'Meta Platforms Inc.' },
-            { symbol: 'NFLX', shares: 25, avgPrice: 400.00, currentPrice: 485.20, name: 'Netflix Inc.' },
-            { symbol: 'CRM', shares: 40, avgPrice: 180.00, currentPrice: 220.75, name: 'Salesforce Inc.' },
-            { symbol: 'ADBE', shares: 30, avgPrice: 320.00, currentPrice: 380.90, name: 'Adobe Inc.' },
-            { symbol: 'PYPL', shares: 50, avgPrice: 80.00, currentPrice: 95.30, name: 'PayPal Holdings Inc.' },
-            { symbol: 'INTC', shares: 60, avgPrice: 40.00, currentPrice: 45.80, name: 'Intel Corp.' },
-            { symbol: 'AMD', shares: 45, avgPrice: 100.00, currentPrice: 120.45, name: 'Advanced Micro Devices' },
-            { symbol: 'ORCL', shares: 55, avgPrice: 70.00, currentPrice: 85.30, name: 'Oracle Corp.' },
-            { symbol: 'IBM', shares: 30, avgPrice: 150.00, currentPrice: 165.20, name: 'International Business Machines' }
-        ],
+        holdings: [],
         searchResults: [
             { symbol: 'META', name: 'Meta Platforms Inc.', price: 285.50, change: '+2.5%' },
             { symbol: 'NFLX', name: 'Netflix Inc.', price: 485.20, change: '-1.2%' },
@@ -45,6 +28,26 @@
             { symbol: 'IBM', name: 'International Business Machines', price: 165.20, change: '-0.4%' }
         ]
     };
+
+    async function fetchPortfolioData() {
+    try {
+        const response = await fetch("http://127.0.0.1:5000/portfolio");
+        if (!response.ok) {
+            throw new Error("Failed to fetch portfolio data");
+        }
+
+        const data = await response.json();
+
+        // Update the global holdings with live backend data
+        portfolioData.holdings = data;
+        filteredHoldings = [...portfolioData.holdings];
+
+        populateHoldingsTable();
+    } catch (error) {
+        console.error("Error fetching portfolio data:", error);
+    }
+}
+
 
     // Pagination variables for search table
     let currentPage = 1;
@@ -140,30 +143,28 @@
 
         const paginatedHoldings = getPaginatedData(filteredHoldings, holdingsCurrentPage, recordsPerPage - 1);
 
-        paginatedHoldings.forEach(holding => {
-            const currentValue = holding.shares * holding.currentPrice;
-            const totalCost = holding.shares * holding.avgPrice;
-            const gainLoss = currentValue - totalCost;
-            const gainLossPercent = (gainLoss / totalCost * 100).toFixed(2);
+    paginatedHoldings.forEach(holding => {
+    const symbol = holding.ticker;
+    const avgPrice = Number(holding.avg_price);
+    const quantity = Number(holding.total_quantity);
 
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${holding.symbol}</strong><br><small>${holding.name}</small></td>
-                <td>${holding.shares}</td>
-                <td>$${holding.avgPrice.toFixed(2)}</td>
-                <td>$${currentValue.toFixed(2)}</td>
-                <td class="${gainLoss >= 0 ? 'trend-positive' : 'trend-negative'}">
-                    ${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)} (${gainLossPercent}%)
-                </td>
-                <td>
-                    <button class="btn btn-danger" onclick="sellStock('${holding.symbol}')">Sell</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${symbol}</td>
+        <td>${quantity}</td>
+        <td>$${avgPrice.toFixed(2)}</td>
+        <td>$${currentValue.toFixed(2)}</td>
+        <td class="${gainLossClass}">$${gainLoss.toFixed(2)}</td>
+        <td>
+            <button class="btn btn-danger btn-sm" onclick="sellStock('${symbol}')">Sell</button>
+        </td>
+    `;
+    tbody.appendChild(row);
+});
 
-        updateHoldingsPaginationControls();
-    }
+
+    updateHoldingsPaginationControls();
+}
 
     // Get paginated data
     function getPaginatedData(data, page, recordsPerPage) {
@@ -346,7 +347,7 @@
     // Initialize the dashboard
     document.addEventListener('DOMContentLoaded', function() {
         initializeCharts();
-        populateHoldingsTable();
+        fetchPortfolioData();
         populateSearchTable();
         setupSearch();
     });
