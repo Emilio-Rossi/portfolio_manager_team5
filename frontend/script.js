@@ -162,7 +162,7 @@
         <td class="${gainLoss >= 0 ? 'trend-positive' : 'trend-negative'}">
                     ${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)} (${gainLossPercent}%)
         </td>
-         <td>
+        <td>
             <button class="btn btn-danger btn-sm" onclick="sellStock('${symbol}')">Sell</button>
         </td>
     `;
@@ -340,9 +340,21 @@
 
     // Action functions
     function addStock(symbol) {
-        alert(`Added ${symbol} to your portfolio!`);
-        // In a real application, this would make an API call to add the stock
+        const stock = portfolioData.searchResults.find(s => s.symbol === symbol);
+        if (!stock) {
+            alert("Stock data not found.");
+            return;
+        }
+
+        document.getElementById('buySymbol').value = stock.symbol;
+        document.getElementById('buyPrice').value = stock.price.toFixed(2);
+        document.getElementById('buyQuantity').value = '';
+        document.getElementById('buyDate').value = new Date().toISOString().split('T')[0];
+
+        const modal = new bootstrap.Modal(document.getElementById('buyStockModal'));
+        modal.show();
     }
+
 
     function sellStock(symbol) {
         if (confirm(`Are you sure you want to sell ${symbol}?`)) {
@@ -352,9 +364,51 @@
     }
 
     // Initialize the dashboard
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         initializeCharts();
         fetchPortfolioData();
         populateSearchTable();
         setupSearch();
-    });
+
+        // Handle the Buy Stock form submission
+        document.getElementById('buyStockForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const symbol = document.getElementById('buySymbol').value;
+            const quantity = Number(document.getElementById('buyQuantity').value);
+            const price = Number(document.getElementById('buyPrice').value);
+            const date = document.getElementById('buyDate').value;
+
+            const purchaseData = {
+                ticker: symbol,
+                quantity: quantity,
+                asset_type: 'equity',
+                purchase_price : price,
+                purchase_date: date
+            };
+
+            try {
+                console.log("Sending this to backend:", purchaseData);
+                const response = await fetch('http://127.0.0.1:5000/portfolio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(purchaseData)
+                });
+
+                if (!response.ok) throw new Error('Failed to add stock');
+
+                alert('Stock added successfully!');
+                fetchPortfolioData(); // Refresh table
+            } catch (error) {
+                console.error('Error adding stock:', error);
+                alert('Error adding stock. Please try again.');
+            }
+
+            // Close the modal after submission
+            const modalEl = document.getElementById('buyStockModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+        });
+});
