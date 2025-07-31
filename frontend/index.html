@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
     <script src ="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
     
 </head>
@@ -105,8 +104,45 @@
             </div>
         </div>
     </div>
+    <!-- Buy Stock Modal -->
+<!-- Modal -->
+<div class="modal fade" id="buyStockModal" tabindex="-1" aria-labelledby="buyStockModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="buyStockForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="buyStockModalLabel">Buy Stock</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+              <label for="buySymbol" class="form-label">Symbol</label>
+              <input type="text" class="form-control" id="buySymbol" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="buyPrice" class="form-label">Price</label>
+              <input type="text" class="form-control" id="buyPrice" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="buyQuantity" class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="buyQuantity" required>
+            </div>
+            <div class="mb-3">
+              <label for="buyDate" class="form-label">Purchase Date</label>
+              <input type="date" class="form-control" id="buyDate" readonly>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Confirm Purchase</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
-
+<!-- Bootstrap JS Bundle (must be placed after the modal) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="script.js"></script>
     
 </body>
 </html>
