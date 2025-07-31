@@ -1,5 +1,5 @@
  // Sample data
-    const portfolioData = {
+    let portfolioData = {
         performance: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             values: [110000, 112000, 108000, 115000, 118000, 120000, 122000, 119000, 123000, 125000, 124000, 125847]
@@ -37,9 +37,10 @@
         }
 
         const data = await response.json();
-
-        // Update the global holdings with live backend data
+        console.log(data)
+        // // Update the global holdings with live backend data
         portfolioData.holdings = data;
+        console.log(portfolioData.holdings)
         filteredHoldings = [...portfolioData.holdings];
 
         populateHoldingsTable();
@@ -144,18 +145,24 @@
         const paginatedHoldings = getPaginatedData(filteredHoldings, holdingsCurrentPage, recordsPerPage - 1);
 
     paginatedHoldings.forEach(holding => {
-    const symbol = holding.ticker;
-    const avgPrice = Number(holding.avg_price);
-    const quantity = Number(holding.total_quantity);
-
+    let symbol = holding.ticker;
+    let avgPrice = Number(holding.avg_price);
+    let quantity = Number(holding.total_quantity);
+    let currentValue=Number(holding.current_value);
+    console.log(holding.current_value)
+    let totalCost = quantity * avgPrice;
+    let gainLoss = currentValue - totalCost;
+    let gainLossPercent = (gainLoss / totalCost * 100).toFixed(2);
     const row = document.createElement('tr');
     row.innerHTML = `
         <td>${symbol}</td>
         <td>${quantity}</td>
         <td>$${avgPrice.toFixed(2)}</td>
         <td>$${currentValue.toFixed(2)}</td>
-        <td class="${gainLossClass}">$${gainLoss.toFixed(2)}</td>
-        <td>
+        <td class="${gainLoss >= 0 ? 'trend-positive' : 'trend-negative'}">
+                    ${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)} (${gainLossPercent}%)
+        </td>
+         <td>
             <button class="btn btn-danger btn-sm" onclick="sellStock('${symbol}')">Sell</button>
         </td>
     `;

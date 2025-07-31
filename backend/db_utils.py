@@ -65,6 +65,19 @@ def view_purchases():
     cursor.close()
     conn.close()
     return results
+def get_net_quantity(ticker):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+            SELECT 
+                COALESCE(sum(quantity),0) AS net_quantity,
+            FROM portfolio
+            where ticker=%s;
+            """,(ticker, ))
+    results = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return results
 
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()

@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request
 from models import PortfolioItem
 from db_utils import view_portfolios, insert_portfolio_item,view_purchases
 from function import get_latest_stock_price
+
 portfolio_bp = Blueprint('portfolio', __name__)
 
 # GET /portfolio
@@ -44,4 +45,17 @@ def insert_portfolio():
         }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-#POST /sell portfolio
+# #POST /sell portfolio
+# @portfolio_bp.route('sell/portfolio', methods=['POST'])
+# def sell_portfolio():
+#     try:
+#         data = request.get_json()
+#         item = PortfolioItem(**data)  # Validate with Pydantic
+#         new_id = insert_portfolio_item(item)
+#         return jsonify({
+#             "message": "Portfolio item added successfully",
+#             "id": new_id,
+#             "data": item.dict()  # ✅ Convert Pydantic object to dict
+#         }), 201
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
