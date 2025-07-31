@@ -55,6 +55,17 @@ def view_portfolios():
     cursor.close()
     conn.close()
     return results
+def view_purchases():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+            SELECT *
+            FROM portfolio;
+            """)
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return results
 
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()
