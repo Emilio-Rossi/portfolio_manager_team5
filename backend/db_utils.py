@@ -42,7 +42,15 @@ def insert_portfolio_item(item: PortfolioItem):
 def get_all_items():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM portfolio;")
+    cursor.execute("""
+            SELECT 
+                ticker,
+                SUM(quantity) AS total_quantity,
+                ROUND(SUM(purchase_price * quantity) / SUM(quantity), 2) AS avg_price
+            FROM portfolio
+            GROUP BY ticker;
+
+            """)
     results = cursor.fetchall()
     cursor.close()
     conn.close()
