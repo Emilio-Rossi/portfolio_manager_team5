@@ -1,8 +1,9 @@
 # routes/portfolio_endpoint.py
+from decimal import Decimal
 from flask import Blueprint, jsonify, request
 from models import PortfolioItem
 from db_utils import view_portfolios, insert_portfolio_item,view_purchases
-
+from function import get_latest_stock_price
 portfolio_bp = Blueprint('portfolio', __name__)
 
 # GET /portfolio
@@ -10,15 +11,21 @@ portfolio_bp = Blueprint('portfolio', __name__)
 def get_portfolio():
     try:
         items = view_portfolios()
+        for item in items:        
+            price=get_latest_stock_price(item['ticker'])
+            dPrice=Decimal(str(price))
+            val=dPrice*item['total_quantity']
+            item['current_value'] = round(float(val), 2)
         return jsonify(items), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 #GET /purchases/all
 @portfolio_bp.route('/purchases/all', methods=['GET'])
 def get_purchases():
     try:
         items = view_purchases()
+        for item in items:
+            print(item)
         return jsonify(items), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

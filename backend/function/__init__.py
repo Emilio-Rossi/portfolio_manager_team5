@@ -1,0 +1,1 @@
+from .yfinance_function import get_latest_stock_price

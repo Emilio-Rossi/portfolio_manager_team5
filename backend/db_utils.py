@@ -49,7 +49,6 @@ def view_portfolios():
                 ROUND(SUM(purchase_price * quantity) / SUM(quantity), 2) AS avg_price
             FROM portfolio
             GROUP BY ticker;
-
             """)
     results = cursor.fetchall()
     cursor.close()
