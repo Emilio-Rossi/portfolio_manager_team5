@@ -28,6 +28,7 @@
         filteredHoldings = [...portfolioData.holdings];
 
         populateHoldingsTable();
+        populateMetrics();
     } catch (error) {
         console.error("Error fetching portfolio data:", error);
     }
@@ -119,6 +120,35 @@
                 }
             }
         });
+    }
+
+
+    // Populate total portfolio value
+    function populateMetrics() {
+        const totalPortfolioValue = document.getElementById('totalPortfolioValue');
+        const totalGainLoss = document.getElementById('totalGainLoss');
+        const cashBalance = document.getElementById('cashBalance');
+        const totalHoldings = document.getElementById('totalHoldings');
+
+        let totalCurrentValue = 0;
+        let totalChange = 0;
+        let totalHoldingsCount = portfolioData.holdings.length;
+
+        portfolioData.holdings.forEach(holding => {
+            const currentValue = Number(holding.current_value);
+            const costBasis = Number(holding.avg_price) * Number(holding.total_quantity);
+            const gainLoss = currentValue - costBasis;
+
+        totalCurrentValue += currentValue;
+        totalChange += gainLoss;
+    });
+
+        const dummyCash = 10000; // Replace with actual cash balance from backend
+
+        totalPortfolioValue.innerHTML = `$${totalCurrentValue.toFixed(2)}`;
+        totalGainLoss.innerHTML = `$${totalChange.toFixed(2)}`;
+        cashBalance.innerHTML = `$${dummyCash.toFixed(2)}`;
+        totalHoldings.innerHTML = totalHoldingsCount;
     }
 
     // Populate holdings table with pagination
@@ -370,6 +400,7 @@
         fetchPortfolioData();
         populateSearchTable();
         setupSearch();
+        populateMetrics();
 
         // Handle the Buy Stock form submission
         document.getElementById('buyStockForm').addEventListener('submit', async function (event) {
