@@ -36,6 +36,8 @@ def get_purchases():
 def insert_portfolio():
     try:
         data = request.get_json()
+        price=get_latest_stock_price(data['ticker'])
+        data['purchase_price']=price
         item = PortfolioItem(**data)  # Validate with Pydantic
         new_id = insert_portfolio_item(item)
         return jsonify({
