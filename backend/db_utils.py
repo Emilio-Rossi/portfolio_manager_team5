@@ -43,12 +43,21 @@ def view_portfolios():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
-            SELECT 
-                ticker,
-                SUM(quantity) AS total_quantity,
-                ROUND(SUM(purchase_price * quantity) / SUM(quantity), 2) AS avg_price
+            SELECT
+            ticker,
+            SUM(quantity) AS total_quantity,
+            CASE
+                WHEN SUM(CASE WHEN quantity > 0 THEN quantity ELSE 0 END) > 0
+                THEN ROUND(
+                    SUM(CASE WHEN quantity > 0 THEN purchase_price * quantity ELSE 0 END)
+                    / SUM(CASE WHEN quantity > 0 THEN quantity ELSE 0 END),
+                    2
+                )
+                ELSE 0
+            END AS avg_price
             FROM portfolio
-            GROUP BY ticker;
+            GROUP BY ticker
+            HAVING total_quantity>0;
             """)
     results = cursor.fetchall()
     cursor.close()
@@ -70,14 +79,14 @@ def get_net_quantity(ticker):
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
             SELECT 
-                COALESCE(sum(quantity),0) AS net_quantity,
+                COALESCE(sum(quantity),0) AS net_quantity
             FROM portfolio
             where ticker=%s;
             """,(ticker, ))
     results = cursor.fetchone()
     cursor.close()
     conn.close()
-    return results
+    return results['net_quantity'] if results else 0
 
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()

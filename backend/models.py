@@ -5,7 +5,7 @@ from datetime import date
 class PortfolioItem(BaseModel):
     id: Optional[int] = None  # ✅ Default to None, so it's optional
     ticker: str = Field(..., example="AAPL")
-    quantity: int = Field(..., gt=0)
+    quantity: int 
     asset_type: str = Field(..., example="equity")
     purchase_price: float = Field(..., gt=0)
     purchase_date: date
@@ -16,7 +16,6 @@ class PortfolioItem(BaseModel):
         if v.lower() not in allowed:
             raise ValueError("Asset type must be 'equity', 'bond', or 'cash'")
         return v.lower()
-
 
 
 
