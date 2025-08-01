@@ -50,6 +50,9 @@ def insert_portfolio():
 def sell_portfolio():
     try:
         data = request.get_json()
+        price=get_latest_stock_price(data['ticker'])
+
+        data['purchase_price']=price
         sell_item = PortfolioItem(**data)  # Validate input
 
         # Check holdings
