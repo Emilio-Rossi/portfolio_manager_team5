@@ -415,7 +415,6 @@
                 ticker: symbol,
                 quantity: quantity,
                 asset_type: 'equity',
-                purchase_price : price,
                 purchase_date: date
             };
 
