@@ -10,23 +10,7 @@
             colors: ['#4285f4', '#6fa8f7', '#a3c4f9']
         },
         holdings: [],
-        searchResults: [
-            { symbol: 'META', name: 'Meta Platforms Inc.', price: 285.50, change: '+2.5%' },
-            { symbol: 'NFLX', name: 'Netflix Inc.', price: 485.20, change: '-1.2%' },
-            { symbol: 'CRM', name: 'Salesforce Inc.', price: 220.75, change: '+0.8%' },
-            { symbol: 'ADBE', name: 'Adobe Inc.', price: 380.90, change: '+1.5%' },
-            { symbol: 'PYPL', name: 'PayPal Holdings Inc.', price: 95.30, change: '-0.5%' },
-            { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 450.80, change: '+1.5%' },
-            { symbol: 'TSLA', name: 'Tesla Inc.', price: 180.45, change: '-0.5%' },
-            { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 95.30, change: '-0.5%' },
-            { symbol: 'AAPL', name: 'Apple Inc.', price: 175.50, change: '+1.2%' },
-            { symbol: 'MSFT', name: 'Microsoft Corp.', price: 320.75, change: '+0.8%' },
-            { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 145.20, change: '+0.3%' },
-            { symbol: 'INTC', name: 'Intel Corp.', price: 45.80, change: '-1.1%' },
-            { symbol: 'AMD', name: 'Advanced Micro Devices', price: 120.45, change: '+2.1%' },
-            { symbol: 'ORCL', name: 'Oracle Corp.', price: 85.30, change: '+0.7%' },
-            { symbol: 'IBM', name: 'International Business Machines', price: 165.20, change: '-0.4%' }
-        ]
+        searchResults: []
     };
 
     async function fetchPortfolioData() {
@@ -142,7 +126,7 @@
         const tbody = document.getElementById('holdingsTableBody');
         tbody.innerHTML = '';
 
-        const paginatedHoldings = getPaginatedData(filteredHoldings, holdingsCurrentPage, recordsPerPage - 1);
+        const paginatedHoldings = getPaginatedData(filteredHoldings, holdingsCurrentPage, recordsPerPage);
 
     paginatedHoldings.forEach(holding => {
     let symbol = holding.ticker;
@@ -321,26 +305,43 @@
     // Search functionality with pagination
     function setupSearch() {
         const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            
-            // Filter results based on search term
-            filteredResults = portfolioData.searchResults.filter(stock => 
-                stock.symbol.toLowerCase().includes(searchTerm) || 
-                stock.name.toLowerCase().includes(searchTerm)
-            );
-            
-            // Reset to first page when searching
-            currentPage = 1;
-            
-            // Repopulate table with filtered results
-            populateSearchTable();
+
+        searchInput.addEventListener('input', async function (e) {
+            const query = e.target.value.trim().toUpperCase();
+
+            // If input is empty, clear table and stop
+            if (!query) {
+                filteredResults = [];
+                populateSearchTable();
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/search?q=${query}`);
+                if (!response.ok) throw new Error("Failed to fetch stock");
+
+                const stock = await response.json();
+
+                // Check for error in backend response
+                if (stock.error) {
+                    filteredResults = [];
+                } else {
+                    filteredResults = [stock]; // wrap in array for table
+                }
+
+                populateSearchTable(); // update table with result
+            } catch (err) {
+                console.error("Search failed:", err);
+                filteredResults = [];
+                populateSearchTable();
+            }
         });
-    }
+}
+
 
     // Action functions
     function addStock(symbol) {
-        const stock = portfolioData.searchResults.find(s => s.symbol === symbol);
+        const stock = filteredResults.find(s => s.symbol === symbol);
         if (!stock) {
             alert("Stock data not found.");
             return;
