@@ -15,16 +15,19 @@
 
     async function fetchPortfolioData() {
     try {
+        //fetch data from backend
         const response = await fetch("http://127.0.0.1:5000/portfolio");
+        // response validation
         if (!response.ok) {
             throw new Error("Failed to fetch portfolio data");
         }
-
+        //extract data from backend response and parse as json 
         const data = await response.json();
         console.log(data)
-        // // Update the global holdings with live backend data
+        // Update the global holdings with live backend data
         portfolioData.holdings = data;
         console.log(portfolioData.holdings)
+        //shallow copy 
         filteredHoldings = [...portfolioData.holdings];
 
         populateHoldingsTable();
@@ -33,7 +36,6 @@
         console.error("Error fetching portfolio data:", error);
     }
 }
-
 
     // Pagination variables for search table
     let currentPage = 1;
@@ -44,9 +46,9 @@
     let holdingsCurrentPage = 1;
     let filteredHoldings = [...portfolioData.holdings];
 
-    // Initialize charts
+    // Initializing the charts' section
     function initializeCharts() {
-        // Performance Chart
+        // Creates a performance Chart 
         const performanceCtx = document.getElementById('performanceChart').getContext('2d');
         new Chart(performanceCtx, {
             type: 'line',
@@ -94,7 +96,7 @@
             }
         });
 
-        // Allocation Chart
+        // Creates an Allocation Chart
         const allocationCtx = document.getElementById('allocationChart').getContext('2d');
         new Chart(allocationCtx, {
             type: 'doughnut',
@@ -167,34 +169,35 @@
     // Populate holdings table with pagination
     function populateHoldingsTable() {
         const tbody = document.getElementById('holdingsTableBody');
-        tbody.innerHTML = '';
+        tbody.innerHTML = ''; //cleans table to avoid duplicate rows
 
         const paginatedHoldings = getPaginatedData(filteredHoldings, holdingsCurrentPage, recordsPerPage);
-
-    paginatedHoldings.forEach(holding => {
-    let symbol = holding.ticker;
-    let avgPrice = Number(holding.avg_price);
-    let quantity = Number(holding.total_quantity);
-    let currentValue=Number(holding.current_value);
-    console.log(holding.current_value)
-    let totalCost = quantity * avgPrice;
-    let gainLoss = currentValue - totalCost;
-    let gainLossPercent = (gainLoss / totalCost * 100).toFixed(2);
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${symbol}</td>
-        <td>${quantity}</td>
-        <td>$${avgPrice.toFixed(2)}</td>
-        <td>$${currentValue.toFixed(2)}</td>
-        <td class="${gainLoss >= 0 ? 'trend-positive' : 'trend-negative'}">
-                    ${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)} (${gainLossPercent}%)
-        </td>
-        <td>
-            <button class="btn btn-danger btn-sm" onclick="sellStock('${symbol}')">Sell</button>
-        </td>
-    `;
-    tbody.appendChild(row);
-});
+        // loops through the holdings
+        paginatedHoldings.forEach(holding => {              
+            let symbol = holding.ticker;    
+            let avgPrice = Number(holding.avg_price);
+            let quantity = Number(holding.total_quantity);
+            let currentValue=Number(holding.current_value);
+            console.log(holding.current_value)
+            let totalCost = quantity * avgPrice;
+            let gainLoss = currentValue - totalCost;
+            let gainLossPercent = (gainLoss / totalCost * 100).toFixed(2);
+            // Creates the HTML Table Row
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${symbol}</td>
+                <td>${quantity}</td>
+                <td>$${avgPrice.toFixed(2)}</td>
+                <td>$${currentValue.toFixed(2)}</td>
+                <td class="${gainLoss >= 0 ? 'trend-positive' : 'trend-negative'}">
+                            ${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)} (${gainLossPercent}%)
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="sellStock('${symbol}')">Sell</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+    });
 
 
     updateHoldingsPaginationControls();
@@ -207,13 +210,17 @@
         return data.slice(startIndex, endIndex);
     }
 
-    // Update pagination controls
+    // Update pagination controls generates previous and next buttons
+    // and displays current page info
+    // for the search results table
+
     function updatePaginationControls() {
         const totalPages = Math.ceil(filteredResults.length / recordsPerPage);
         let paginationContainer = document.getElementById('searchPagination');
         
         if (!paginationContainer) {
             // Create pagination container if it doesn't exist
+            // This assumes the search table is the first table in the section
             const searchTableContainer = document.querySelector('.tables-section .table-container:first-child');
             const paginationDiv = document.createElement('div');
             paginationDiv.id = 'searchPagination';
@@ -228,7 +235,7 @@
             return; // Don't show pagination if only one page
         }
 
-        // Previous button
+        // Previous button 
         const prevBtn = document.createElement('button');
         prevBtn.className = 'btn btn-secondary pagination-btn';
         prevBtn.innerHTML = '← Previous';
@@ -248,7 +255,7 @@
         pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
         paginationContainer.appendChild(pageInfo);
 
-        // Next button
+        // Next button 
         const nextBtn = document.createElement('button');
         nextBtn.className = 'btn btn-secondary pagination-btn';
         nextBtn.innerHTML = 'Next →';
@@ -264,6 +271,9 @@
     }
 
     // Populate search table with pagination
+    // This function is called when search results are available or when the page loads
+    // It updates the search table with the current page of results
+    // and sets up pagination controls
     function populateSearchTable() {
         const tbody = document.getElementById('searchTableBody');
         tbody.innerHTML = '';
@@ -286,10 +296,14 @@
             tbody.appendChild(row);
         });
 
-        updatePaginationControls();
+        updatePaginationControls(); 
     }
 
     // Update holdings pagination controls
+    // This function is called to create or update the pagination controls for the holdings table
+    // It generates previous and next buttons and displays current page info
+    // It also creates the pagination container if it doesn't exist
+    // and appends it to the last table container in the section
     function updateHoldingsPaginationControls() {
         const totalPages = Math.ceil(filteredHoldings.length / recordsPerPage);
         let paginationContainer = document.getElementById('holdingsPagination');
@@ -345,7 +359,9 @@
         paginationContainer.appendChild(nextBtn);
     }
 
-    // Search functionality with pagination
+    // This function sets up the search input event listener
+    // It fetches stock data from the backend based on the search query
+    // and updates the search table with the results
     function setupSearch() {
         const searchInput = document.getElementById('searchInput');
 
@@ -382,7 +398,9 @@
 }
 
 
-    // Action functions
+    // This function adds a stock to the portfolio
+    // It populates the Buy Stock modal with stock data
+    // and shows the modal for the user to enter purchase details
     function addStock(symbol) {
         const stock = filteredResults.find(s => s.symbol === symbol);
         if (!stock) {
@@ -399,15 +417,43 @@
         modal.show();
     }
 
-
-    function sellStock(symbol) {
-        if (confirm(`Are you sure you want to sell ${symbol}?`)) {
-            alert(`Sold ${symbol}!`);
-            // In a real application, this would make an API call to sell the stock
+    // This function sells a stock from the portfolio
+    // It populates the Sell Stock modal with stock data
+    // and shows the modal for the user to enter sell details
+    async function sellStock(symbol) {
+        // Find the stock in the portfolio
+        const stock = portfolioData.holdings.find(s => s.ticker === symbol);
+        if (!stock) {
+            alert("Stock data not found!");
+            return;
         }
-    }
 
-    // Initialize the dashboard
+        // Fetch real-time price from yfinance via /search
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/search?q=${symbol}`);
+            if (!response.ok) throw new Error('Failed to fetch price');
+
+            const data = await response.json();
+            const currentPrice = Number(data.price);
+
+            // Populate modal fields
+            document.getElementById('sellSymbol').value = stock.ticker;
+            document.getElementById('sellSymbolDisplay').value = stock.ticker;
+            document.getElementById('sellPrice').value = currentPrice.toFixed(2);
+            document.getElementById('sellQuantity').value = '';
+            document.getElementById('sellDate').value = new Date().toISOString().split('T')[0];
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('sellStockModal'));
+            modal.show();
+
+        } catch (error) {
+            console.error('Error fetching current price:', error);
+            alert('Failed to fetch current price.');
+        }
+}
+
+    // Initialize the dashboar
     document.addEventListener('DOMContentLoaded', function () {
         initializeCharts();
         fetchPortfolioData();
@@ -415,7 +461,7 @@
         setupSearch();
         populateMetrics();
 
-        // Handle the Buy Stock form submission
+        // Handle the Buy Stock form submission 
         document.getElementById('buyStockForm').addEventListener('submit', async function (event) {
             event.preventDefault();
 
@@ -455,4 +501,43 @@
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
         });
+        document.getElementById('sellStockForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const symbol = document.getElementById('sellSymbol').value;
+            const quantity = Number(document.getElementById('sellQuantity').value);
+            const price = Number(document.getElementById('sellPrice').value);
+            const date = new Date().toISOString().split('T')[0];
+
+            const sellData = {
+                ticker: symbol,
+                quantity: -quantity, // 👈 Negative quantity for sell
+                asset_type: 'equity',
+                purchase_price: price,
+                purchase_date: date
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/portfolio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sellData)
+                });
+
+                if (!response.ok) throw new Error('Failed to sell stock');
+
+                alert('Stock sold successfully!');
+                fetchPortfolioData(); // Refresh portfolio table
+            } catch (error) {
+                console.error('Error selling stock:', error);
+                alert('Error selling stock. Please try again.');
+            }
+
+            const modalEl = document.getElementById('sellStockModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+        });
+
 });

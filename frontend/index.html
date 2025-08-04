@@ -137,9 +137,42 @@
         </div>
       </div>
     </form>
-  </div>
+  </div>.........................................................
 </div>
 
+<!-- Sell Stock Modal -->
+<div class="modal fade" id="sellStockModal" tabindex="-1" aria-labelledby="sellStockModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="sellStockForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sellStockModalLabel">Sell Stock</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="sellSymbol" name="ticker" hidden>
+        <div class="mb-3">
+          <label for="sellSymbolDisplay" class="form-label">Symbol</label>
+          <input type="text" class="form-control" id="sellSymbolDisplay" readonly>
+        </div>
+        <div class="mb-3">
+          <label for="sellQuantity" class="form-label">Quantity to Sell</label>
+          <input type="number" class="form-control" id="sellQuantity" min="1" required>
+        </div>
+        <div class="mb-3">
+          <label for="sellPrice" class="form-label">Current Price</label>
+          <input type="text" class="form-control" id="sellPrice" disabled>
+        </div>
+          <div class="mb-3">
+          <label for="sellDate" class="form-label">Sale Date</label>
+          <input type="text" class="form-control" id="sellDate" disabled>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-danger">Confirm Sell</button>
+      </div>
+    </form>
+  </div>
+</div>
 <!-- Bootstrap JS Bundle (must be placed after the modal) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="script.js"></script>
