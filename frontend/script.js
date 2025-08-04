@@ -134,15 +134,17 @@
 
         let totalCurrentValue = 0;
         let totalChange = 0;
-        let totalHoldingsCount = portfolioData.holdings.length;
+        let totalSharesOwned = 0;
 
         portfolioData.holdings.forEach(holding => {
             const currentValue = Number(holding.current_value);
             const costBasis = Number(holding.avg_price) * Number(holding.total_quantity);
             const gainLoss = currentValue - costBasis;
+            const sharesOwned = Number(holding.total_quantity);
 
         totalCurrentValue += currentValue;
         totalChange += gainLoss;
+        totalSharesOwned += sharesOwned;
     });
         try {
         // Fetch cash balance from backend
@@ -158,7 +160,7 @@
         totalPortfolioValue.innerHTML = `$${totalCurrentValue.toFixed(2)}`;
         totalGainLoss.innerHTML = `$${totalChange.toFixed(2)}`;
         cashBalance.innerHTML = `$${dummyCash.toFixed(2)}`;
-        totalHoldings.innerHTML = totalHoldingsCount;
+        totalHoldings.innerHTML = totalSharesOwned;
 
     } catch (error) {
         console.error("Error fetching balance:", error);
