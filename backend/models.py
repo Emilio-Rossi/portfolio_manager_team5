@@ -9,6 +9,7 @@ class PortfolioItem(BaseModel):
     asset_type: str = Field(..., example="equity")
     purchase_price: float = Field(..., gt=0)
     purchase_date: date
+    balance:float
 
     @validator("asset_type")
     def validate_asset_type(cls, v):

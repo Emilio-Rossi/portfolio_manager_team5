@@ -2,6 +2,7 @@
 CREATE DATABASE IF NOT EXISTS portfolio_db;
 
 USE portfolio_db;
+DROP TABLE IF EXISTS portfolio
 
 CREATE TABLE IF NOT EXISTS portfolio (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -9,6 +10,7 @@ CREATE TABLE IF NOT EXISTS portfolio (
     quantity INT NOT NULL,
     asset_type VARCHAR(20) NOT NULL,
     purchase_price FLOAT NOT NULL,
-    purchase_date DATE
+    purchase_date DATE,
+    balance FLOAT NOT NULL
 );
 

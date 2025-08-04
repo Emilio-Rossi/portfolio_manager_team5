@@ -24,15 +24,16 @@ def insert_portfolio_item(item: PortfolioItem):
     conn = get_connection()
     cursor = conn.cursor()
     sql = """
-        INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date,balance)
+        VALUES (%s, %s, %s, %s, %s,%s)
     """
     values = (
         item.ticker,
         item.quantity,
         item.asset_type,
         item.purchase_price,
-        item.purchase_date
+        item.purchase_date,
+        item.balance
     )
     cursor.execute(sql, values)
     conn.commit()
@@ -87,6 +88,21 @@ def get_net_quantity(ticker):
     cursor.close()
     conn.close()
     return results['net_quantity'] if results else 0
+def get_current_balance():
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT balance
+            FROM portfolio
+            ORDER BY id DESC
+            LIMIT 1;
+        """)
+        result = cursor.fetchone()
+        return result[0] if result else 10000  # Return numeric value
+    finally:
+        cursor.close()
+        conn.close()
 
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()

@@ -33,11 +33,13 @@ def initialize_database():
                 quantity INT NOT NULL,
                 asset_type VARCHAR(20) NOT NULL,
                 purchase_price FLOAT NOT NULL,
-                purchase_date DATE
+                purchase_date DATE,
+                balance FLOAT NOT NULLL
             );
         """)
 
         conn.commit()
+       
         print(f"✅ Database '{db_name}' initialized successfully.")
 
     except mysql.connector.Error as err:
