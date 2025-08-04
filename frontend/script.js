@@ -511,14 +511,14 @@
 
             const sellData = {
                 ticker: symbol,
-                quantity: -quantity, // 👈 Negative quantity for sell
+                quantity: quantity, // 👈 Negative quantity for sell
                 asset_type: 'equity',
                 purchase_price: price,
                 purchase_date: date
             };
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/portfolio', {
+                const response = await fetch('http://127.0.0.1:5000/sell/portfolio', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
