@@ -124,7 +124,7 @@
 
 
     // Populate total portfolio value
-    function populateMetrics() {
+    async function populateMetrics() {
         const totalPortfolioValue = document.getElementById('totalPortfolioValue');
         const totalGainLoss = document.getElementById('totalGainLoss');
         const cashBalance = document.getElementById('cashBalance');
@@ -142,13 +142,26 @@
         totalCurrentValue += currentValue;
         totalChange += gainLoss;
     });
+        try {
+        // Fetch cash balance from backend
+        const response = await fetch("http://127.0.0.1:5000/balance");
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();  // ✅ Parse JSON
+        const dummyCash = data.current_balance; // ✅ Access correctly
+        console.log("Cash balance:", dummyCash);
 
-        const dummyCash = 10000; // Replace with actual cash balance from backend
-
+        // Update UI
         totalPortfolioValue.innerHTML = `$${totalCurrentValue.toFixed(2)}`;
         totalGainLoss.innerHTML = `$${totalChange.toFixed(2)}`;
         cashBalance.innerHTML = `$${dummyCash.toFixed(2)}`;
         totalHoldings.innerHTML = totalHoldingsCount;
+
+    } catch (error) {
+        console.error("Error fetching balance:", error);
+        cashBalance.innerHTML = "Error loading balance";
+    }
     }
 
     // Populate holdings table with pagination
