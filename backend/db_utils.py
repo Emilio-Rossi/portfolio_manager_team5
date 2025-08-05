@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta
 import os
 import mysql.connector
 from dotenv import load_dotenv
+import pandas as pd
 from models import PortfolioItem
+import yfinance as yf
 
 # Load environment variables
 load_dotenv()
@@ -96,7 +99,7 @@ def get_current_balance():
         cursor.execute("""
             SELECT balance
             FROM portfolio
-            ORDER BY id DESC
+            ORDER BY purchase_date,id DESC
             LIMIT 1;
         """)
         result = cursor.fetchone()
@@ -105,21 +108,45 @@ def get_current_balance():
         cursor.close()
         conn.close()
 
-# def get_all_balance():
-#     conn = get_connection()
-#     try:
-#         cursor = conn.cursor()
-#         cursor.execute("""
-#             SELECT balance,date
-#             FROM portfolio
-#             ORDER BY purchase_date,id DESC
-#             LIMIT 1;
-#         """)
-#         result = cursor.fetchone()
-#         return result
-#     finally:
-#         cursor.close()
-#         conn.close()
+def get_1week_portfolio_value():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get all transactions
+    cursor.execute("SELECT purchase_date, ticker, quantity FROM portfolio ORDER BY purchase_date;")
+    transactions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    df = pd.DataFrame(transactions)
+    df['purchase_date'] = pd.to_datetime(df['purchase_date'])
+    tickers = df['ticker'].unique().tolist()
+
+    # Get last 7 days
+    today = datetime.today()
+    days = [(today - timedelta(days=i)).date() for i in range(6, -1, -1)]
+
+    # Download historical prices for last 7 days
+    prices = yf.download(tickers, start=days[0], end=today, interval="1d")['Close']
+
+    daily_values = []
+    for day in days:
+        # Get holdings up to this day
+        holdings = df[df['purchase_date'] <= pd.Timestamp(day)].groupby('ticker')['quantity'].sum()
+
+        # Calculate portfolio value
+        value = 0
+        for ticker, qty in holdings.items():
+            if qty > 0 and ticker in prices.columns:
+                # Get the price for this day (if missing, forward fill)
+                if day in prices.index:
+                    price = prices.loc[pd.Timestamp(day), ticker]
+                else:
+                    price = prices[ticker].ffill().iloc[-1]
+                value += qty * price
+
+        daily_values.append({"date": str(day), "portfolio_value": round(value, 2)})
+    return daily_values
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()
     cursor = conn.cursor()

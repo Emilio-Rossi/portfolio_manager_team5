@@ -131,54 +131,63 @@
     let filteredHoldings = [...portfolioData.holdings];
 
     // Initializing the charts' section
-    function initializeCharts() {
+    async function initializeCharts() {
         // Creates a performance Chart 
-        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-        new Chart(performanceCtx, {
-            type: 'line',
-            data: {
-                labels: portfolioData.performance.labels,
-                datasets: [{
-                    label: 'Portfolio Value',
-                    data: portfolioData.performance.values,
-                    borderColor: '#4285f4',
-                    backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        try {
+            // ✅ 1. Fetch data from Flask API
+            const response = await fetch('http://127.0.0.1:5000/portfolio_value/7days');
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+            const data = await response.json();
+            console.log(`portfolio data:`, data);
+
+            // ✅ 2. Extract labels (dates) and values (portfolio values)
+            const labels = data.map(item => item.date);
+            const values = data.map(item => item.portfolio_value);
+
+            // ✅ 3. Render Chart.js line chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,  // ✅ Dynamic labels from API
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: values,  // ✅ Dynamic values from API
+                        borderColor: '#4285f4',
+                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#999999'
-                        }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
                     },
-                    y: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#999999' }
                         },
-                        ticks: {
-                            color: '#999999',
-                            callback: function(value) {
-                                return '$' + (value / 1000) + 'k';
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: {
+                                color: '#999999',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString(); // ✅ More readable
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+
+        } catch (error) {
+            console.error("Error loading chart:", error);
+        }
 
         // Creates an Allocation Chart
         const allocationCtx = document.getElementById('allocationChart').getContext('2d');

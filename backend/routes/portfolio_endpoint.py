@@ -2,7 +2,7 @@
 from decimal import Decimal
 from flask import Blueprint, jsonify, request
 from models import PortfolioItem
-from db_utils import get_net_quantity, view_portfolios, insert_portfolio_item,view_purchases,get_current_balance
+from db_utils import get_net_quantity, view_portfolios, insert_portfolio_item,view_purchases,get_current_balance,get_1week_portfolio_value
 from function import get_latest_stock_price
 
 portfolio_bp = Blueprint('portfolio', __name__)
@@ -37,7 +37,13 @@ def get_balance():
         return jsonify({"current_balance": balance}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+@portfolio_bp.route('/portfolio_value/7days', methods=['GET'])
+def get_1week_value():
+    try:
+        balances = get_1week_portfolio_value()  # returns float
+        return jsonify(balances), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 # POST /portfolio
 @portfolio_bp.route('/portfolio', methods=['POST'])
 def insert_portfolio():
