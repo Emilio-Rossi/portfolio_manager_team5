@@ -104,6 +104,21 @@ def get_current_balance():
         cursor.close()
         conn.close()
 
+def get_all_balance():
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT balance,date
+            FROM portfolio
+            ORDER BY date,id DESC
+            LIMIT 1;
+        """)
+        result = cursor.fetchone()
+        return result[0] if result else 10000  # Return numeric value
+    finally:
+        cursor.close()
+        conn.close()
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()
     cursor = conn.cursor()
