@@ -118,7 +118,7 @@ def get_all_balance():
             LIMIT 1;
         """)
         result = cursor.fetchone()
-        return res if result else 10000  # Return numeric value
+        return result
     finally:
         cursor.close()
         conn.close()
