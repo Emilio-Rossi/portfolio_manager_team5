@@ -2,7 +2,7 @@
 from decimal import Decimal
 from flask import Blueprint, jsonify, request
 from models import PortfolioItem
-from db_utils import get_net_quantity, view_portfolios, insert_portfolio_item,view_purchases,get_current_balance, get_all_balance
+from db_utils import get_net_quantity, view_portfolios, insert_portfolio_item,view_purchases,get_current_balance
 from function import get_latest_stock_price
 
 portfolio_bp = Blueprint('portfolio', __name__)
