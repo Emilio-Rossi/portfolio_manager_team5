@@ -99,8 +99,10 @@ def get_current_balance():
             ORDER BY id DESC
             LIMIT 1;
         """)
-        result = cursor.fetchone()
-        return result[0] if result else 10000  # Return numeric value
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return results
     finally:
         cursor.close()
         conn.close()
@@ -116,7 +118,7 @@ def get_all_balance():
             LIMIT 1;
         """)
         result = cursor.fetchone()
-        return result[0] if result else 10000  # Return numeric value
+        return res if result else 10000  # Return numeric value
     finally:
         cursor.close()
         conn.close()
