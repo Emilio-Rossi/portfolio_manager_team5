@@ -46,6 +46,7 @@ def view_portfolios():
     cursor.execute("""
             SELECT
             ticker,
+            ANY_VALUE(asset_type) AS asset_type,
             SUM(quantity) AS total_quantity,
             CASE
                 WHEN SUM(CASE WHEN quantity > 0 THEN quantity ELSE 0 END) > 0
