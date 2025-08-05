@@ -260,7 +260,11 @@
 
         // Update UI
         totalPortfolioValue.innerHTML = `$${totalCurrentValue.toFixed(2)}`;
-        totalGainLoss.innerHTML = `$${totalChange.toFixed(2)}`;
+        totalGainLoss.innerHTML = `
+            <span class="${totalChange >= 0 ? 'trend-positive' : 'trend-negative'}"> 
+                $${totalChange.toFixed(2)}
+            </span>
+        `;
         cashBalance.innerHTML = `$${dummyCash.toFixed(2)}`;
         totalHoldings.innerHTML = totalSharesOwned;
 
