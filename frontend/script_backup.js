@@ -4,10 +4,13 @@
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             values: [110000, 112000, 108000, 115000, 118000, 120000, 122000, 119000, 123000, 125000, 124000, 125847]
         },
+        allocation: {
+            labels: ['Stocks', 'Bonds', 'Cash'],
+            values: [85000, 28447, 12450],
+            colors: ['#4285f4', '#6fa8f7', '#a3c4f9']
+        },
         holdings: [],
-        searchResults: [
-            
-        ]
+        searchResults: []
     };
 
     async function fetchPortfolioData() {
@@ -29,97 +32,10 @@
 
         populateHoldingsTable();
         populateMetrics();
-        
-        // Calculate and update allocation chart
-        updateAllocationChart();
     } catch (error) {
         console.error("Error fetching portfolio data:", error);
     }
 }
-
-    // Frontend-only allocation calculation
-    function calculateAllocation(initialBalance = 10000) {
-        const allocations = [];
-        let totalInvested = 0;
-        
-        // Group holdings by asset type
-        const assetTypeGroups = {};
-        
-        portfolioData.holdings.forEach(holding => {
-            const assetType = holding.asset_type; 
-            const purchaseValue = holding.avg_price * holding.total_quantity;
-            
-            if (!assetTypeGroups[assetType]) {
-                assetTypeGroups[assetType] = {
-                    total_purchase_value: 0,
-                    total_quantity: 0,
-                    holdings: []
-                };
-            }
-            
-            assetTypeGroups[assetType].total_purchase_value += purchaseValue;
-            assetTypeGroups[assetType].total_quantity += holding.total_quantity;
-            assetTypeGroups[assetType].holdings.push(holding);
-            totalInvested += purchaseValue;
-        });
-        
-        let stockAllocation = 0;
-        // Calculate allocation for each asset type
-        Object.keys(assetTypeGroups).forEach(assetType => {
-            const group = assetTypeGroups[assetType];
-            const allocationPercentage = (group.total_purchase_value / initialBalance) * 100;
-            
-            allocations.push({
-                ticker: assetType.toUpperCase(),
-                total_quantity: group.total_quantity,
-                purchase_value: group.total_purchase_value,
-                allocation_percentage: allocationPercentage,
-                asset_type: assetType
-            });
-            stockAllocation += allocationPercentage;
-        });
-        
-        // Add cash allocation
-        const cashAllocation = Math.max(0, 100 - stockAllocation)  ;
-        allocations.push({
-            ticker: 'CASH',
-            allocation_percentage: cashAllocation,
-            asset_type: 'cash'
-        });
-
-        return {
-            total_invested: totalInvested,
-            allocations: allocations
-        };
-    }
-
-    let allocationChart = null;
-    // Update allocation chart with calculated data
-    function updateAllocationChart() {
-        const initialBalance = parseFloat(document.getElementById('initialBalance')?.value || 10000);
-        const allocationData = calculateAllocation(initialBalance);
-        
-        // Update chart data
-        const labels = allocationData.allocations.map(item => item.ticker);
-        const values = allocationData.allocations.map(item => item.allocation_percentage);
-        
-        // Generate colors for each allocation
-        const colors = [
-            '#7aa6ecff', '#64be82ff', '#a3c4f9'
-        ];
-        
-        const backgroundColor = labels.map((_, index) => colors[index % colors.length]);
-        
-        // Update the existing chart
-        if (allocationChart) {
-            allocationChart.data.labels = labels;
-            allocationChart.data.datasets[0].data = values;
-            allocationChart.data.datasets[0].backgroundColor = backgroundColor;
-            allocationChart.update();
-        }
-        
-        console.log('Allocation data:', allocationData);
-    }
 
     // Pagination variables for search table
     let currentPage = 1;
@@ -182,13 +98,13 @@
 
         // Creates an Allocation Chart
         const allocationCtx = document.getElementById('allocationChart').getContext('2d');
-        allocationChart = new Chart(allocationCtx, {
-            type: 'pie',
+        new Chart(allocationCtx, {
+            type: 'doughnut',
             data: {
-                labels: ['Loading...'],
+                labels: portfolioData.allocation.labels,
                 datasets: [{
-                    data: [1],
-                    backgroundColor: ['#cccccc'],
+                    data: portfolioData.allocation.values,
+                    backgroundColor: portfolioData.allocation.colors,
                     borderWidth: 0
                 }]
             },
@@ -199,17 +115,8 @@
                     legend: {
                         position: 'bottom',
                         labels: {
-                            color: '#1d1d1dff',
+                            color: '#cccccc',
                             padding: 20
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed;
-                                return `${label}: ${value.toFixed(2)}%`;
-                            }
                         }
                     }
                 }
@@ -376,20 +283,16 @@
         const paginatedData = getPaginatedData(filteredResults, currentPage, recordsPerPage);
 
         paginatedData.forEach(stock => {
-
-            const price = stock.price !== undefined ? `$${stock.price.toFixed(2)}` : 'N/A';
-            const change = stock.change ?? 'N/A';
-            const changeClass = stock.change && stock.change.startsWith('+') ? 'trend-positive' : 'trend-negative';
-
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td><strong>${stock.symbol}</strong></td>
                 <td>${stock.name}</td>
-                <td>${price}</td>
-                <td class="${changeClass}">${change}</td>
+                <td>$${stock.price.toFixed(2)}</td>
+                <td class="${stock.change.startsWith('+') ? 'trend-positive' : 'trend-negative'}">
+                    ${stock.change}
                 </td>
                 <td>
-                    <button class="btn btn-primary" onclick="addStock('${stock.symbol}')">Buy</button>
+                    <button class="btn btn-primary" onclick="addStock('${stock.symbol}')">Add</button>
                 </td>
             `;
             tbody.appendChild(row);
@@ -463,15 +366,14 @@
     // and updates the search table with the results
     function setupSearch() {
         const searchInput = document.getElementById('searchInput');
-        const autocompleteList = document.getElementById('autocompleteList');
 
         searchInput.addEventListener('input', async function (e) {
             const query = e.target.value.trim().toUpperCase();
-            autocompleteList.innerHTML = '';
 
             // If input is empty, clear table and stop
             if (!query) {
-                loadPopularStocks(); // Load popular stocks when input is empty
+                filteredResults = [];
+                populateSearchTable();
                 return;
             }
 
@@ -479,57 +381,43 @@
                 const response = await fetch(`http://127.0.0.1:5000/search?q=${query}`);
                 if (!response.ok) throw new Error("Failed to fetch stock");
 
-                const data = await response.json();
+                const stock = await response.json();
 
-                // Ensure the response is always treated as an array
-                filteredResults = Array.isArray(data) ? data : [data];
+                // Check for error in backend response
+                if (stock.error) {
+                    filteredResults = [];
+                } else {
+                    filteredResults = [stock]; // wrap in array for table
+                }
 
-                populateSearchTable();
-            } catch (error) {
-                console.error("Search failed:", error);
+                populateSearchTable(); // update table with result
+            } catch (err) {
+                console.error("Search failed:", err);
                 filteredResults = [];
                 populateSearchTable();
             }
         });
-    }   
-
-async function loadPopularStocks() {
-    try {
-        const response = await fetch('http://127.0.0.1:5000/quote-list');
-        const data = await response.json();
-        filteredResults = data;
-        populateSearchTable();
-    } catch (error) {
-        console.error("Error loading popular stocks:", error);
-    }
 }
-
 
 
     // This function adds a stock to the portfolio
     // It populates the Buy Stock modal with stock data
     // and shows the modal for the user to enter purchase details
-async function addStock(symbol) {
-    try {
-        const response = await fetch(`http://127.0.0.1:5000/search?q=${symbol}`);
-        if (!response.ok) throw new Error("Failed to fetch real-time stock");
+    function addStock(symbol) {
+        const stock = filteredResults.find(s => s.symbol === symbol);
+        if (!stock) {
+            alert("Stock data not found.");
+            return;
+        }
 
-        const stock = await response.json();
-        const stockData = Array.isArray(stock) ? stock[0] : stock;
-
-        document.getElementById('buySymbol').value = stockData.symbol;
-        document.getElementById('buyPrice').value = stockData.price ? stockData.price.toFixed(2) : '';
+        document.getElementById('buySymbol').value = stock.symbol;
+        document.getElementById('buyPrice').value = stock.price.toFixed(2);
         document.getElementById('buyQuantity').value = '';
         document.getElementById('buyDate').value = new Date().toISOString().split('T')[0];
 
         const modal = new bootstrap.Modal(document.getElementById('buyStockModal'));
         modal.show();
-    } catch (error) {
-        console.error("Error fetching real-time data:", error);
-        alert("Could not load real-time price. Please try again.");
     }
-}
-
 
     // This function sells a stock from the portfolio
     // It populates the Sell Stock modal with stock data
@@ -565,7 +453,6 @@ async function addStock(symbol) {
             console.error('Error fetching current price:', error);
             alert('Failed to fetch current price.');
         }
-    
 }
 
     // Initialize the dashboar
@@ -575,7 +462,6 @@ async function addStock(symbol) {
         populateSearchTable();
         setupSearch();
         populateMetrics();
-        loadPopularStocks();
 
         // Handle the Buy Stock form submission 
         document.getElementById('buyStockForm').addEventListener('submit', async function (event) {
@@ -606,7 +492,7 @@ async function addStock(symbol) {
                 if (!response.ok) throw new Error('Failed to add stock');
 
                 alert('Stock added successfully!');
-                fetchPortfolioData(); // Refresh table and allocation chart
+                fetchPortfolioData(); // Refresh table
             } catch (error) {
                 console.error('Error adding stock:', error);
                 alert('Error adding stock. Please try again.');
@@ -645,7 +531,7 @@ async function addStock(symbol) {
                 if (!response.ok) throw new Error('Failed to sell stock');
 
                 alert('Stock sold successfully!');
-                fetchPortfolioData(); // Refresh portfolio table and allocation chart
+                fetchPortfolioData(); // Refresh portfolio table
             } catch (error) {
                 console.error('Error selling stock:', error);
                 alert('Error selling stock. Please try again.');

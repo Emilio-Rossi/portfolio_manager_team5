@@ -2,7 +2,7 @@
 CREATE DATABASE IF NOT EXISTS portfolio_db;
 
 USE portfolio_db;
-DROP TABLE IF EXISTS portfolio
+DROP TABLE IF EXISTS portfolio;
 
 CREATE TABLE IF NOT EXISTS portfolio (
     id INT AUTO_INCREMENT PRIMARY KEY,
