@@ -4,11 +4,6 @@
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             values: [110000, 112000, 108000, 115000, 118000, 120000, 122000, 119000, 123000, 125000, 124000, 125847]
         },
-        allocation: {
-            labels: ['Stocks', 'Bonds', 'Cash'],
-            values: [85000, 28447, 12450],
-            colors: ['#4285f4', '#6fa8f7', '#a3c4f9']
-        },
         holdings: [],
         searchResults: []
     };
@@ -32,10 +27,97 @@
 
         populateHoldingsTable();
         populateMetrics();
+        
+        // Calculate and update allocation chart
+        updateAllocationChart();
     } catch (error) {
         console.error("Error fetching portfolio data:", error);
     }
 }
+
+    // Frontend-only allocation calculation
+    function calculateAllocation(initialBalance = 10000) {
+        const allocations = [];
+        let totalInvested = 0;
+        
+        // Group holdings by asset type
+        const assetTypeGroups = {};
+        
+        portfolioData.holdings.forEach(holding => {
+            const assetType = holding.asset_type; 
+            const purchaseValue = holding.avg_price * holding.total_quantity;
+            
+            if (!assetTypeGroups[assetType]) {
+                assetTypeGroups[assetType] = {
+                    total_purchase_value: 0,
+                    total_quantity: 0,
+                    holdings: []
+                };
+            }
+            
+            assetTypeGroups[assetType].total_purchase_value += purchaseValue;
+            assetTypeGroups[assetType].total_quantity += holding.total_quantity;
+            assetTypeGroups[assetType].holdings.push(holding);
+            totalInvested += purchaseValue;
+        });
+        
+        let stockAllocation = 0;
+        // Calculate allocation for each asset type
+        Object.keys(assetTypeGroups).forEach(assetType => {
+            const group = assetTypeGroups[assetType];
+            const allocationPercentage = (group.total_purchase_value / initialBalance) * 100;
+            
+            allocations.push({
+                ticker: assetType.toUpperCase(),
+                total_quantity: group.total_quantity,
+                purchase_value: group.total_purchase_value,
+                allocation_percentage: allocationPercentage,
+                asset_type: assetType
+            });
+            stockAllocation += allocationPercentage;
+        });
+        
+        // Add cash allocation
+        const cashAllocation = Math.max(0, 100 - stockAllocation)  ;
+        allocations.push({
+            ticker: 'CASH',
+            allocation_percentage: cashAllocation,
+            asset_type: 'cash'
+        });
+
+        return {
+            total_invested: totalInvested,
+            allocations: allocations
+        };
+    }
+
+    let allocationChart = null;
+    // Update allocation chart with calculated data
+    function updateAllocationChart() {
+        const initialBalance = parseFloat(document.getElementById('initialBalance')?.value || 10000);
+        const allocationData = calculateAllocation(initialBalance);
+        
+        // Update chart data
+        const labels = allocationData.allocations.map(item => item.ticker);
+        const values = allocationData.allocations.map(item => item.allocation_percentage);
+        
+        // Generate colors for each allocation
+        const colors = [
+            '#7aa6ecff', '#64be82ff', '#a3c4f9'
+        ];
+        
+        const backgroundColor = labels.map((_, index) => colors[index % colors.length]);
+        
+        // Update the existing chart
+        if (allocationChart) {
+            allocationChart.data.labels = labels;
+            allocationChart.data.datasets[0].data = values;
+            allocationChart.data.datasets[0].backgroundColor = backgroundColor;
+            allocationChart.update();
+        }
+        
+        console.log('Allocation data:', allocationData);
+    }
 
     // Pagination variables for search table
     let currentPage = 1;
@@ -98,13 +180,13 @@
 
         // Creates an Allocation Chart
         const allocationCtx = document.getElementById('allocationChart').getContext('2d');
-        new Chart(allocationCtx, {
-            type: 'doughnut',
+        allocationChart = new Chart(allocationCtx, {
+            type: 'pie',
             data: {
-                labels: portfolioData.allocation.labels,
+                labels: ['Loading...'],
                 datasets: [{
-                    data: portfolioData.allocation.values,
-                    backgroundColor: portfolioData.allocation.colors,
+                    data: [1],
+                    backgroundColor: ['#cccccc'],
                     borderWidth: 0
                 }]
             },
@@ -115,8 +197,17 @@
                     legend: {
                         position: 'bottom',
                         labels: {
-                            color: '#cccccc',
+                            color: '#1d1d1dff',
                             padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                return `${label}: ${value.toFixed(2)}%`;
+                            }
                         }
                     }
                 }
@@ -492,7 +583,7 @@
                 if (!response.ok) throw new Error('Failed to add stock');
 
                 alert('Stock added successfully!');
-                fetchPortfolioData(); // Refresh table
+                fetchPortfolioData(); // Refresh table and allocation chart
             } catch (error) {
                 console.error('Error adding stock:', error);
                 alert('Error adding stock. Please try again.');
@@ -531,7 +622,7 @@
                 if (!response.ok) throw new Error('Failed to sell stock');
 
                 alert('Stock sold successfully!');
-                fetchPortfolioData(); // Refresh portfolio table
+                fetchPortfolioData(); // Refresh portfolio table and allocation chart
             } catch (error) {
                 console.error('Error selling stock:', error);
                 alert('Error selling stock. Please try again.');
