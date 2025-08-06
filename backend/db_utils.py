@@ -99,7 +99,7 @@ def get_current_balance():
         cursor.execute("""
             SELECT balance
             FROM portfolio
-            ORDER BY purchase_date,id DESC
+            ORDER BY purchase_date desc,id DESC
             LIMIT 1;
         """)
         result = cursor.fetchone()
