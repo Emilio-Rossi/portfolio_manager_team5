@@ -242,11 +242,9 @@
             const currentValue = Number(holding.current_value);
             const costBasis = Number(holding.avg_price) * Number(holding.total_quantity);
             const gainLoss = currentValue - costBasis;
-            const sharesOwned = Number(holding.total_quantity);
 
         totalCurrentValue += currentValue;
         totalChange += gainLoss;
-        totalSharesOwned += sharesOwned;
     });
         try {
         // Fetch cash balance from backend
@@ -266,7 +264,7 @@
             </span>
         `;
         cashBalance.innerHTML = `$${dummyCash.toFixed(2)}`;
-        totalHoldings.innerHTML = totalSharesOwned;
+        totalHoldings.innerHTML = portfolioData.holdings.length;
 
     } catch (error) {
         console.error("Error fetching balance:", error);
