@@ -92,6 +92,11 @@ def sell_portfolio():
         data['purchase_price']=price
         data['balance']=get_current_balance()+price*data['quantity']
 
+        # Determine asset type using yfinance
+        ticker_info = yf.Ticker(data['ticker']).info
+        asset_type_raw = ticker_info.get('quoteType', 'unknown')  # often 'ETF', 'EQUITY', etc.
+        data['asset_type'] = asset_type_raw.lower() if asset_type_raw else 'unknown'
+
         sell_item = PortfolioItem(**data)  # Validate input
 
         # Check holdings
@@ -106,7 +111,7 @@ def sell_portfolio():
         insert_data = {
             "ticker": sell_item.ticker,
             "quantity": -sell_item.quantity,  # negative for sell
-            "asset_type": "equity",  # or dynamic lookup
+            "asset_type": sell_item.asset_type,  # or dynamic lookup
             "purchase_price": sell_item.purchase_price,
             "purchase_date": sell_item.purchase_date,
             "balance":sell_item.balance
