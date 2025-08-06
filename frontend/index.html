@@ -89,14 +89,19 @@
                     <table id="holdingsTable">
                         <thead>
                             <tr>
+                                <th>Symbol</th>
                                 <th>
                                   <div class="header-with-btn">
-                                    Symbol
-                                    <button onclick="sortTable('ticker')" class="sort-btn" id="sort-symbol">▲▼</button>
+                                    Shares
+                                    <button onclick="sortTable('shares')" class="sort-btn" id="sort-shares">▲▼</button>
                                   </div>
                                 </th>
-                                <th>Shares</th>
-                                <th>Avg Price</th>
+                                <th>
+                                  <div class="header-with-btn">
+                                    Avg Price
+                                    <button onclick="sortTable('avg_price')" class="sort-btn" id="sort-avg-price">▲▼</button>
+                                  </div>
+                                </th>
                                 <th>
                                   <div class="header-with-btn">
                                     Current Value
