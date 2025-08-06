@@ -311,6 +311,92 @@
     updateHoldingsPaginationControls();
 }
 
+// Sort function for holdings table
+let sortState = {
+    column: '',
+    direction: 'ascending'
+};
+
+const extractors = {
+    ticker: (holding) => holding.ticker.toLowerCase(),
+    shares: (holding) => parseInt(holding.quantity) || 0,
+    avg_price: (holding) => parseFloat(holding.avg_price) || 0,
+    current_val: (holding) => parseFloat(holding.current_value) || 0,
+    gain_loss: (holding) => {
+        const currentValue = parseFloat(holding.current_value) || 0;
+        const costBasis = parseFloat(holding.avg_price) * (parseInt(holding.total_quantity) || 0);
+        return currentValue - costBasis;
+    }
+};
+
+function sortTable(column) {
+    // Only sort if column is provided and table has data
+    if (!column || !filteredHoldings || filteredHoldings.length === 0) return;
+    
+    // Determine sort direction
+    if (sortState.column === column) {
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortState.direction = 'asc';
+    }
+    sortState.column = column;
+    
+    // Update button indicators
+    updateSortButtons(column, sortState.direction);
+    
+    // Sort using built-in .sort() method
+    filteredHoldings.sort((a, b) => {
+        const aValue = extractors[column](a);
+        const bValue = extractors[column](b);
+        
+        let comparison;
+        if (typeof aValue === 'string') {
+            comparison = aValue.localeCompare(bValue);
+        } else {
+            comparison = aValue - bValue;
+        }
+        
+        return sortState.direction === 'asc' ? comparison : -comparison;
+    });
+
+    holdingsCurrentPage = 1; // Reset to first page after sorting
+    populateHoldingsTable();
+}
+
+function updateSortButtons(activeColumn, direction) {
+    // Reset all buttons
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.textContent = '▲▼';
+        btn.style.opacity = '0.5';
+    });
+    
+    // Update active button
+    const buttonMap = {
+        ticker: 'sort-symbol',
+        shares: 'sort-shares',
+        avg_price: 'sort-avg-price',
+        current_val: 'sort-current-val',
+        gain_loss: 'sort-gain-loss'
+    };
+    
+    const activeButton = document.getElementById(buttonMap[activeColumn]);
+    if (activeButton) {
+        activeButton.style.opacity = '1';
+        activeButton.textContent = direction === 'asc' ? '▲' : '▼';
+    }
+}
+
+// Initialize on page load - integrates with your existing DOMContentLoaded
+// Add this to your existing DOMContentLoaded event listener
+function initializeSorting() {
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.style.opacity = '0.5';
+    });
+    
+    // Uncomment to add sorting to all columns:
+    // addSortToAllColumns();
+}
+
     // Get paginated data
     function getPaginatedData(data, page, recordsPerPage) {
         const startIndex = (page - 1) * recordsPerPage;
@@ -589,6 +675,7 @@ async function addStock(symbol) {
         setupSearch();
         populateMetrics();
         loadPopularStocks();
+        initializeSorting();
 
         // Handle the Buy Stock form submission 
         document.getElementById('buyStockForm').addEventListener('submit', async function (event) {
