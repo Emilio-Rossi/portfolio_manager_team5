@@ -698,9 +698,10 @@ async function addStock(symbol) {
                     body: JSON.stringify(purchaseData)
                 });
 
-                if (!response.ok) throw new Error('Failed to add stock');
+                if (!response.ok) throw new Error('Failed to buy stock');
 
-                alert('Stock added successfully!');
+                const result = await response.json();
+                alert(result.message);
                 fetchPortfolioData(); // Refresh table and allocation chart
             } catch (error) {
                 console.error('Error adding stock:', error);
@@ -739,7 +740,8 @@ async function addStock(symbol) {
 
                 if (!response.ok) throw new Error('Failed to sell stock');
 
-                alert('Stock sold successfully!');
+                const result = await response.json();
+                alert(result.message);
                 fetchPortfolioData(); // Refresh portfolio table and allocation chart
             } catch (error) {
                 console.error('Error selling stock:', error);

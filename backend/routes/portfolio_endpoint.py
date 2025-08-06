@@ -75,7 +75,7 @@ def insert_portfolio():
         item = PortfolioItem(**data)  # Validate with Pydantic
         new_id = insert_portfolio_item(item)
         return jsonify({
-            "message": "Portfolio item added successfully",
+            "message": f"Bought {item.ticker} successfully at ${item.purchase_price:.2f}",
             "id": new_id,
             "data": item.dict()  # ✅ Convert Pydantic object to dict
         }), 201
@@ -116,7 +116,7 @@ def sell_portfolio():
         new_id = insert_portfolio_item(PortfolioItem(**insert_data))
 
         return jsonify({
-            "message": "Portfolio item added successfully",
+            "message": f"Sold {sell_item.ticker} successfully at ${sell_item.purchase_price:.2f}",
             "id": new_id,
             "data": sell_item.dict() # ✅ Convert Pydantic object to dict
         }), 201
