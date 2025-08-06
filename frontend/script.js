@@ -317,7 +317,7 @@ let sortState = {
 
 const extractors = {
     ticker: (holding) => holding.ticker.toLowerCase(),
-    shares: (holding) => parseInt(holding.quantity) || 0,
+    shares: (holding) => parseInt(holding.total_quantity) || 0,
     avg_price: (holding) => parseFloat(holding.avg_price) || 0,
     current_val: (holding) => parseFloat(holding.current_value) || 0,
     gain_loss: (holding) => {
@@ -390,9 +390,6 @@ function initializeSorting() {
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.style.opacity = '0.5';
     });
-    
-    // Uncomment to add sorting to all columns:
-    // addSortToAllColumns();
 }
 
     // Get paginated data
