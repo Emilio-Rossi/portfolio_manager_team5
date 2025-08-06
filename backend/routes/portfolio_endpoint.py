@@ -35,6 +35,7 @@ def get_purchases():
 def get_balance():
     try:
         balance = get_current_balance()  # returns float
+        print(balance)
         return jsonify({"current_balance": balance}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -42,6 +43,7 @@ def get_balance():
 def get_1week_value():
     try:
         balances = get_1week_portfolio_value()  # returns float
+        print(balances)
         return jsonify(balances), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

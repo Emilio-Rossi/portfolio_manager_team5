@@ -113,10 +113,8 @@ def get_1week_portfolio_value():
     cursor = conn.cursor(dictionary=True)
 
     # Get all transactions
-    cursor.execute("SELECT purchase_date, ticker, quantity FROM portfolio ORDER BY purchase_date;")
+    cursor.execute("SELECT id,purchase_date, ticker, quantity, balance FROM portfolio ORDER BY purchase_date;")
     transactions = cursor.fetchall()
-    cursor.close()
-    conn.close()
 
     df = pd.DataFrame(transactions)
     df['purchase_date'] = pd.to_datetime(df['purchase_date'])
@@ -131,21 +129,34 @@ def get_1week_portfolio_value():
 
     daily_values = []
     for day in days:
-        # Get holdings up to this day
+        # Equity Holdings up to this day
         holdings = df[df['purchase_date'] <= pd.Timestamp(day)].groupby('ticker')['quantity'].sum()
 
-        # Calculate portfolio value
-        value = 0
+        # Calculate equity value
+        equity_value = 0
         for ticker, qty in holdings.items():
             if qty > 0 and ticker in prices.columns:
-                # Get the price for this day (if missing, forward fill)
-                if day in prices.index:
+                if pd.Timestamp(day) in prices.index:
                     price = prices.loc[pd.Timestamp(day), ticker]
                 else:
                     price = prices[ticker].ffill().iloc[-1]
-                value += qty * price
+                equity_value += qty * price
 
-        daily_values.append({"date": str(day), "portfolio_value": round(value, 2)})
+        # Get most recent cash balance before or on this day
+        day_transactions = df[df['purchase_date'] <= pd.Timestamp(day)].sort_values(by=['purchase_date', 'id'], ascending=[False, False])
+        cash_balance = float(day_transactions.iloc[0]['balance']) if not day_transactions.empty else 10000.0
+        print(cash_balance)
+
+        total_value = equity_value + cash_balance
+        daily_values.append({
+            "date": str(day),
+            "portfolio_value": round(total_value, 2),
+            "equity_value": round(equity_value, 2),
+            "cash_balance": round(cash_balance, 2)
+        })
+
+    cursor.close()
+    conn.close()
     return daily_values
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()
