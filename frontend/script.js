@@ -233,39 +233,34 @@ async function populateMetrics() {
     const totalGainLossEl = document.getElementById('totalGainLoss');
     const cashBalanceEl = document.getElementById('cashBalance');
     const totalHoldingsEl = document.getElementById('totalHoldings');
-    const initialBalance = parseFloat(document.getElementById('initialBalance')?.value || 10000); // input default
+    const initialBalance = parseFloat(document.getElementById('initialBalance')?.value || 10000);
 
     let holdingsCurrentValue = 0;
     let totalSharesOwned = 0;
 
-    // Calculate total holdings value and total shares
     portfolioData.holdings.forEach(holding => {
         const currentValue = Number(holding.current_value);
         const sharesOwned = Number(holding.total_quantity);
 
-        totalCurrentValue += currentValue;
-        totalChange += gainLoss;
+        holdingsCurrentValue += currentValue;
+        totalSharesOwned += sharesOwned;
     });
 
     try {
-        // Fetch cash balance from backend
         const response = await fetch("http://127.0.0.1:5000/balance");
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
         const cash = Number(data.current_balance || 0);
 
-        // Total portfolio value = holdings + cash
         const totalPortfolioValue = holdingsCurrentValue + cash;
-
-        // Profit/Loss = Portfolio value - initial investment
         const totalGainLoss = totalPortfolioValue - initialBalance;
+        const percentChange = ((totalGainLoss / initialBalance) * 100).toFixed(2);
 
-        // Update UI
         totalPortfolioValueEl.innerHTML = `$${totalPortfolioValue.toFixed(2)}`;
         totalGainLossEl.innerHTML = `
-            <span class="${totalGainLoss >= 0 ? 'trend-positive' : 'trend-negative'}"> 
-                $${totalGainLoss.toFixed(2)}
+            <span class="${totalGainLoss >= 0 ? 'trend-positive' : 'trend-negative'}">
+                ${totalGainLoss >= 0 ? '+' : ''}$${totalGainLoss.toFixed(2)} (${percentChange}%)
             </span>
         `;
         cashBalanceEl.innerHTML = `$${cash.toFixed(2)}`;
