@@ -13,9 +13,9 @@ class PortfolioItem(BaseModel):
 
     @validator("asset_type")
     def validate_asset_type(cls, v):
-        allowed = ["equity", "bond", "cash"]
+        allowed = ["equity", "bond", "cash", "etf"]
         if v.lower() not in allowed:
-            raise ValueError("Asset type must be 'equity', 'bond', or 'cash'")
+            raise ValueError("Asset type must be 'equity', 'bond', 'cash', or 'etf'")
         return v.lower()
 
 

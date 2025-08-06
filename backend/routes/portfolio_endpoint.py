@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request
 from models import PortfolioItem
 from db_utils import get_net_quantity, view_portfolios, insert_portfolio_item,view_purchases,get_current_balance,get_1week_portfolio_value
 from function import get_latest_stock_price
+import yfinance as yf
 
 portfolio_bp = Blueprint('portfolio', __name__)
 
@@ -64,6 +65,12 @@ def insert_portfolio():
         # Update data with computed fields
         data['purchase_price'] = price
         data['balance'] = current_balance - cost
+
+        # Determine asset type using yfinance
+        ticker_info = yf.Ticker(data['ticker']).info
+        asset_type_raw = ticker_info.get('quoteType', 'unknown')  # often 'ETF', 'EQUITY', etc.
+        data['asset_type'] = asset_type_raw.lower() if asset_type_raw else 'unknown'
+
 
         item = PortfolioItem(**data)  # Validate with Pydantic
         new_id = insert_portfolio_item(item)

@@ -685,7 +685,6 @@ async function addStock(symbol) {
             const purchaseData = {
                 ticker: symbol,
                 quantity: quantity,
-                asset_type: 'equity',
                 purchase_date: date
             };
 
