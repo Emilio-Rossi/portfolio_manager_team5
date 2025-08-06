@@ -228,49 +228,55 @@
 
 
     // Populate total portfolio value
-    async function populateMetrics() {
-        const totalPortfolioValue = document.getElementById('totalPortfolioValue');
-        const totalGainLoss = document.getElementById('totalGainLoss');
-        const cashBalance = document.getElementById('cashBalance');
-        const totalHoldings = document.getElementById('totalHoldings');
+async function populateMetrics() {
+    const totalPortfolioValueEl = document.getElementById('totalPortfolioValue');
+    const totalGainLossEl = document.getElementById('totalGainLoss');
+    const cashBalanceEl = document.getElementById('cashBalance');
+    const totalHoldingsEl = document.getElementById('totalHoldings');
+    const initialBalance = parseFloat(document.getElementById('initialBalance')?.value || 10000); // input default
 
-        let totalCurrentValue = 0;
-        let totalChange = 0;
-        let totalSharesOwned = 0;
+    let holdingsCurrentValue = 0;
+    let totalSharesOwned = 0;
 
-        portfolioData.holdings.forEach(holding => {
-            const currentValue = Number(holding.current_value);
-            const costBasis = Number(holding.avg_price) * Number(holding.total_quantity);
-            const gainLoss = currentValue - costBasis;
+    // Calculate total holdings value and total shares
+    portfolioData.holdings.forEach(holding => {
+        const currentValue = Number(holding.current_value);
+        const sharesOwned = Number(holding.total_quantity);
 
         totalCurrentValue += currentValue;
         totalChange += gainLoss;
     });
-        try {
+
+    try {
         // Fetch cash balance from backend
         const response = await fetch("http://127.0.0.1:5000/balance");
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();  // ✅ Parse JSON
-        const dummyCash = data.current_balance; // ✅ Access correctly
-        console.log("Cash balance:", dummyCash);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+        const cash = Number(data.current_balance || 0);
+
+        // Total portfolio value = holdings + cash
+        const totalPortfolioValue = holdingsCurrentValue + cash;
+
+        // Profit/Loss = Portfolio value - initial investment
+        const totalGainLoss = totalPortfolioValue - initialBalance;
 
         // Update UI
-        totalPortfolioValue.innerHTML = `$${totalCurrentValue.toFixed(2)}`;
-        totalGainLoss.innerHTML = `
-            <span class="${totalChange >= 0 ? 'trend-positive' : 'trend-negative'}"> 
-                $${totalChange.toFixed(2)}
+        totalPortfolioValueEl.innerHTML = `$${totalPortfolioValue.toFixed(2)}`;
+        totalGainLossEl.innerHTML = `
+            <span class="${totalGainLoss >= 0 ? 'trend-positive' : 'trend-negative'}"> 
+                $${totalGainLoss.toFixed(2)}
             </span>
         `;
-        cashBalance.innerHTML = `$${dummyCash.toFixed(2)}`;
-        totalHoldings.innerHTML = portfolioData.holdings.length;
+        cashBalanceEl.innerHTML = `$${cash.toFixed(2)}`;
+        totalHoldingsEl.innerHTML = totalSharesOwned;
 
     } catch (error) {
         console.error("Error fetching balance:", error);
-        cashBalance.innerHTML = "Error loading balance";
+        cashBalanceEl.innerHTML = "Error loading balance";
     }
-    }
+}
+
 
     // Populate holdings table with pagination
     function populateHoldingsTable() {
