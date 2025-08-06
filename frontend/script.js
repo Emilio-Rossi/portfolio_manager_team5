@@ -264,7 +264,7 @@ async function populateMetrics() {
             </span>
         `;
         cashBalanceEl.innerHTML = `$${cash.toFixed(2)}`;
-        totalHoldingsEl.innerHTML = totalSharesOwned;
+        totalHoldingsEl.innerHTML = portfolioData.holdings.length;
 
     } catch (error) {
         console.error("Error fetching balance:", error);
