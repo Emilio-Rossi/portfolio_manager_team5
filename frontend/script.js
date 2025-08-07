@@ -663,6 +663,7 @@ async function addStock(symbol) {
 
             // Populate modal fields
             document.getElementById('sellSymbol').value = stock.ticker;
+            document.getElementById('sellAssetType').value = stock.asset_type;
             document.getElementById('sellSymbolDisplay').value = stock.ticker;
             document.getElementById('sellPrice').value = currentPrice.toFixed(2);
             document.getElementById('sellQuantity').value = '';
@@ -736,11 +737,12 @@ async function addStock(symbol) {
             const quantity = Number(document.getElementById('sellQuantity').value);
             const price = Number(document.getElementById('sellPrice').value);
             const date = new Date().toISOString().split('T')[0];
+            const assetType = document.getElementById('sellAssetType').value;
 
             const sellData = {
                 ticker: symbol,
                 quantity: quantity, // 👈 Negative quantity for sell
-                asset_type: 'equity',
+                asset_type: assetType, // Use the asset type from the modal
                 purchase_price: price,
                 purchase_date: date
             };
