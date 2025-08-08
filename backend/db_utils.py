@@ -148,59 +148,103 @@ def get_current_balance():
         cursor.close()
         conn.close()
 
+
 def get_1week_portfolio_value():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get all transactions
-    cursor.execute("SELECT id, purchase_date, ticker, quantity, balance FROM portfolio ORDER BY purchase_date;")
+    cursor.execute("""
+        SELECT id, purchase_date, ticker, quantity, balance
+        FROM portfolio
+        ORDER BY purchase_date, id;
+    """)
     transactions = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
     df = pd.DataFrame(transactions)
-    df['purchase_date'] = pd.to_datetime(df['purchase_date'])
-    tickers = df['ticker'].unique().tolist()
+    if df.empty:
+        return []
 
-    # Get last 7 calendar days
+    df['purchase_date'] = pd.to_datetime(df['purchase_date'])
+    tickers = sorted(df['ticker'].unique().tolist())
+
+    # Last 7 calendar days (includes weekend)
     today = datetime.today()
     days = [(today - timedelta(days=i)).date() for i in range(6, -1, -1)]
 
-    # Download historical prices for 6 previous days (excluding today)
-    prices = yf.download(tickers, start=days[0], end=today.date(), interval="1d")['Close']
+    # Download with a buffer so we always have a prior business day
+    start_buf = pd.Timestamp(days[0]) - pd.Timedelta(days=10)
+    end_buf = today.date() + timedelta(days=1)  # include today if available
+
+    raw = yf.download(
+        tickers,
+        start=start_buf,
+        end=end_buf,
+        interval="1d",
+        auto_adjust=True,
+        progress=False
+    )
+
+    # Normalize 'Close' to a 2D frame with all tickers as columns
+    close = raw['Close'] if 'Close' in raw else pd.DataFrame(index=[], columns=tickers)
+    if isinstance(close, pd.Series):  # single-ticker edge case
+        close = close.to_frame(name=tickers[0])
+
+    # Ensure all tickers exist as columns
+    close = close.reindex(columns=tickers)
 
     daily_values = []
     for day in days:
-        holdings = df[df['purchase_date'] <= pd.Timestamp(day)].groupby('ticker')['quantity'].sum()
-        equity_value = 0
+        day_ts = pd.Timestamp(day)
+        # holdings up to this calendar day
+        holdings = (
+            df[df['purchase_date'] <= day_ts]
+            .groupby('ticker', as_index=True)['quantity']
+            .sum()
+        )
+
+        equity_value = 0.0
 
         for ticker, qty in holdings.items():
-            if qty > 0:
+            if qty <= 0:
+                continue
+
+            price = None
+            if day == today.date():
+                # Try live (intraday) for today
                 try:
-                    if day == today.date():
-                        # Get latest live intraday price
-                        live_data = yf.Ticker(ticker).history(period='1d', interval='1m')
-                        if not live_data.empty:
-                            price = live_data['Close'].iloc[-1]
-                        else:
-                            raise ValueError("Live data empty")
-                    else:
-                        # Historical price for the day or earlier
-                        price = prices[ticker].loc[:pd.Timestamp(day)].ffill().iloc[-1]
+                    live = yf.Ticker(ticker).history(period='1d', interval='1m')
+                    if not live.empty:
+                        price = float(live['Close'].iloc[-1])
+                except Exception:
+                    price = None
 
-                    if pd.isna(price) or price is None:
-                        raise ValueError("Price is NaN or None")
+                # Live failed? Use last available close up to yesterday
+                if price is None or pd.isna(price):
+                    hist_series = close[ticker].loc[:day_ts].dropna()
+                    price = float(hist_series.iloc[-1]) if not hist_series.empty else None
 
-                except Exception as e:
-                    print(f"[Warning] Using fallback price for {ticker} on {day}: {e}")
+                # Still nothing? Only now use the safety net for TODAY
+                if price is None or pd.isna(price):
                     price = 1500.0
 
-                equity_value += qty * price
+            else:
+                # Historical day: strictly use last available close on/before that day
+                hist_series = close[ticker].loc[:day_ts].dropna()
+                price = float(hist_series.iloc[-1]) if not hist_series.empty else 0.0
+                # Note: using 0.0 for historical missing data avoids fake spikes
+
+            equity_value += qty * price
 
         # Get most recent cash balance on or before this day
-        day_transactions = df[df['purchase_date'] <= pd.Timestamp(day)].sort_values(by=['purchase_date', 'id'], ascending=[False, False])
-        cash_balance = float(day_transactions.iloc[0]['balance']) if not day_transactions.empty else 10000.0
+        day_tx = (
+            df[df['purchase_date'] <= day_ts]
+            .sort_values(['purchase_date', 'id'], ascending=[False, False])
+        )
+        cash_balance = float(day_tx.iloc[0]['balance']) if not day_tx.empty else 10000.0
 
         total_value = equity_value + cash_balance
-
         daily_values.append({
             "date": str(day),
             "portfolio_value": round(total_value, 2),
@@ -208,8 +252,6 @@ def get_1week_portfolio_value():
             "cash_balance": round(cash_balance, 2)
         })
 
-    cursor.close()
-    conn.close()
     return daily_values
 def update_portfolio_item(item_id: int, updated_item: PortfolioItem):
     conn = get_connection()

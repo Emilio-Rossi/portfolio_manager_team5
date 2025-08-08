@@ -15,66 +15,51 @@ CREATE TABLE IF NOT EXISTS portfolio (
 );
 
 USE portfolio_db;
-
 -- ===== Day 1: 2025-08-02 =====
--- Buy AAPL 10 @ $150 → cost $1,500 → balance $8,500
+-- Start: $10,000
+-- Buy AAPL 10 @ $200 → cost $2,000 → balance $8,000
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('AAPL', 10, 'stock', 150.0, '2025-08-02', 8500.0);
+VALUES ('AAPL', 10, 'equity', 200.0, '2025-08-02', 8000.0);
 
--- Buy MSFT 5 @ $300 → cost $1,500 → balance $7,000
+-- Buy MSFT 5 @ $500 → cost $2,500 → balance $5,500
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('MSFT', 5, 'stock', 300.0, '2025-08-02', 7000.0);
+VALUES ('MSFT', 5, 'equity', 500.0, '2025-08-02', 5500.0);
+
+-- Buy AMZN 4 @ $200 → cost $800 → balance $4,700
+INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
+VALUES ('AMZN', 4, 'equity', 200.0, '2025-08-02', 4700.0);
 
 -- ===== Day 2: 2025-08-03 =====
--- Buy TSLA 5 @ $200 → cost $1,000 → balance $6,000
+-- Buy TSLA 5 @ $300 → cost $1,500 → balance $3,200
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('TSLA', 5, 'stock', 200.0, '2025-08-03', 6000.0);
+VALUES ('TSLA', 5, 'equity', 300.0, '2025-08-03', 3200.0);
 
--- Buy META 4 @ $350 → cost $1,400 → balance $4,600
+-- Buy META 2 @ $740 → cost $1,480 → balance $1,720
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('META', 4, 'stock', 350.0, '2025-08-03', 4600.0);
+VALUES ('META', 2, 'equity', 740.0, '2025-08-03', 1720.0);
+
+-- Buy GOOG 3 @ $180 → cost $540 → balance $1,180
+INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
+VALUES ('GOOG', 3, 'equity', 180.0, '2025-08-03', 1180.0);
 
 -- ===== Day 3: 2025-08-04 =====
--- Sell 3 AAPL @ $155 → gain $465 → balance $5,065
+-- Sell 3 AAPL @ $155 → gain $465 → balance $1,645
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('AAPL', -3, 'stock', 155.0, '2025-08-04', 5065.0);
+VALUES ('AAPL', -3, 'equity', 155.0, '2025-08-04', 1645.0);
 
--- Buy PYPL 8 @ $70 → cost $560 → balance $4,505
+-- Buy PYPL 8 @ $70 → cost $560 → balance $1,085
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('PYPL', 8, 'stock', 70.0, '2025-08-04', 4505.0);
+VALUES ('PYPL', 8, 'equity', 70.0, '2025-08-04', 1085.0);
+
+-- Buy PLTR 10 @ $18 → cost $180 → balance $905
+INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
+VALUES ('PLTR', 10, 'equity', 18.0, '2025-08-04', 905.0);
 
 -- ===== Day 4: 2025-08-05 =====
--- Buy AAPL 2 @ $160 → cost $320 → balance $4,185
+-- Buy AAPL 2 @ $160 → cost $320 → balance $585
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('AAPL', 2, 'stock', 160.0, '2025-08-05', 4185.0);
+VALUES ('AAPL', 2, 'equity', 160.0, '2025-08-05', 585.0);
 
--- Buy TSLA 3 @ $210 → cost $630 → balance $3,555
+-- Buy QQQ 1 @ $370 → cost $370 → balance $215
 INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('TSLA', 3, 'stock', 210.0, '2025-08-05', 3555.0);
-
--- ===== Day 5: 2025-08-06 =====
--- Sell 1 TSLA @ $215 → gain $215 → balance $3,770
-INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('TSLA', -1, 'stock', 215.0, '2025-08-06', 3770.0);
-
--- Sell 2 MSFT @ $310 → gain $620 → balance $4,390
-INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('MSFT', -2, 'stock', 310.0, '2025-08-06', 4390.0);
-
--- ===== Day 6: 2025-08-07 =====
--- Buy META 2 @ $355 → cost $710 → balance $3,680
-INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('META', 2, 'stock', 355.0, '2025-08-07', 3680.0);
-
--- Sell 2 PYPL @ $75 → gain $150 → balance $3,830
-INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('PYPL', -2, 'stock', 75.0, '2025-08-07', 3830.0);
-
--- ===== Day 7: 2025-08-08 =====
--- Buy AAPL 1 @ $165 → cost $165 → balance $3,665
-INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('AAPL', 1, 'stock', 165.0, '2025-08-08', 3665.0);
-
--- Buy MSFT 1 @ $305 → cost $305 → balance $3,360
-INSERT INTO portfolio (ticker, quantity, asset_type, purchase_price, purchase_date, balance)
-VALUES ('MSFT', 1, 'stock', 305.0, '2025-08-08', 3360.0);
+VALUES ('QQQ', 1, 'etf', 370.0, '2025-08-05', 215.0);
