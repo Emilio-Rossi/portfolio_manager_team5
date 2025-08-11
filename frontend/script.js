@@ -10,32 +10,28 @@
         ]
     };
 
-    async function fetchPortfolioData() {
-    try {
-        //fetch data from backend
-        const response = await fetch("http://127.0.0.1:5000/portfolio");
-        // response validation
-        if (!response.ok) {
-            throw new Error("Failed to fetch portfolio data");
-        }
-        //extract data from backend response and parse as json 
-        const data = await response.json();
-        console.log(data)
-        // Update the global holdings with live backend data
-        portfolioData.holdings = data;
-        console.log(portfolioData.holdings)
-        //shallow copy 
-        filteredHoldings = [...portfolioData.holdings];
+ async function fetchPortfolioData() {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/portfolio");
+    if (!response.ok) throw new Error("Failed to fetch portfolio data");
 
-        populateHoldingsTable();
-        populateMetrics();
-        
-        await populateMetrics();
-        updateAllocationChart();
-    } catch (error) {
-        console.error("Error fetching portfolio data:", error);
-    }
+    const data = await response.json();
+    portfolioData.holdings = data;
+    filteredHoldings = [...portfolioData.holdings];
+
+    populateHoldingsTable();
+
+    // ⚠️ Only call ONCE and await it (so DOM has correct totals)
+    await populateMetrics();
+
+    // ✅ Now build/update the pie chart with correct numbers
+    updateAllocationChart();
+
+  } catch (error) {
+    console.error("Error fetching portfolio data:", error);
+  }
 }
+
 
     // Frontend-only allocation calculation
     function calculateAllocation(totalPortfolioValue, cash) {
@@ -104,38 +100,76 @@
 let allocationChart = null;
 // Update allocation chart with calculated data
 function updateAllocationChart() {
-// Get metrics from populateMetrics function
-    const totalPortfolioValueEl = document.getElementById('totalPortfolioValue');
-    const cashBalanceEl = document.getElementById('cashBalance');
-    
-    // Extract values from DOM elements (remove $ and commas)
-    const totalPortfolioValue = parseFloat(totalPortfolioValueEl.textContent.replace('$', '').replace(/,/g, '')) || 0;
-    const cash = parseFloat(cashBalanceEl.textContent.replace('$', '').replace(/,/g, '')) || 0;
-    
-    // Calculate allocations with corrected parameters
-    const allocationData = calculateAllocation(totalPortfolioValue, cash);
-    
-    // Update chart data
-    const labels = allocationData.allocations.map(item => item.ticker);
-    const values = allocationData.allocations.map(item => item.allocation_percentage);
-    
-    // Generate colors for each allocation
-    const colors = [
-        '#7aa6ecff', '#64be82ff', '#2b2b4eff', '#ff6b6b', '#45b7d1', '#96ceb4', '#ffeaa7'
-    ];
-    
-    const backgroundColor = labels.map((_, index) => colors[index % colors.length]);
-    
-    // Update the existing chart
-    if (allocationChart) {
-        allocationChart.data.labels = labels;
-        allocationChart.data.datasets[0].data = values;
-        allocationChart.data.datasets[0].backgroundColor = backgroundColor;
-        allocationChart.update();
-    }
-    
+  // 1) Read already-updated DOM values (after populateMetrics ran)
+  const totalPortfolioValueEl = document.getElementById('totalPortfolioValue');
+  const cashBalanceEl = document.getElementById('cashBalance');
+
+  if (!totalPortfolioValueEl || !cashBalanceEl) return; // safety
+
+  const totalPortfolioValue = parseFloat(
+    totalPortfolioValueEl.textContent.replace('$', '').replace(/,/g, '')
+  ) || 0;
+  const cash = parseFloat(
+    cashBalanceEl.textContent.replace('$', '').replace(/,/g, '')
+  ) || 0;
+
+  if (totalPortfolioValue <= 0) return; // nothing to draw
+
+  // 2) Compute allocations
+  const allocationData = calculateAllocation(totalPortfolioValue, cash);
+
     console.log('Allocation data:', allocationData);
+
+  const labels = allocationData.allocations.map(item => item.ticker);
+  const values = allocationData.allocations.map(item => item.allocation_percentage);
+
+  // 3) Colors (stable order)
+  const colors = ['#7aa6ecff', '#64be82ff', '#2b2b4eff', '#ff6b6b', '#45b7d1', '#96ceb4', '#ffeaa7'];
+  const backgroundColor = labels.map((_, i) => colors[i % colors.length]);
+
+  // 4) Create chart if not created yet; otherwise update
+  const ctx = document.getElementById('allocationChart').getContext('2d');
+
+  if (!allocationChart) {
+    allocationChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: backgroundColor,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#1d1d1dff', padding: 20 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const label = context.label || '';
+                const value = context.parsed;
+                return `${label}: ${value.toFixed(2)}%`;
+              }
+            }
+          }
+        }
+      }
+    });
+  } else {
+    allocationChart.data.labels = labels;
+    allocationChart.data.datasets[0].data = values;
+    allocationChart.data.datasets[0].backgroundColor = backgroundColor;
+    allocationChart.update();
+  }
 }
+
+
 
     // Pagination variables for search table
     let currentPage = 1;
@@ -204,42 +238,6 @@ function updateAllocationChart() {
         } catch (error) {
             console.error("Error loading chart:", error);
         }
-
-        // Creates an Allocation Chart
-        const allocationCtx = document.getElementById('allocationChart').getContext('2d');
-        allocationChart = new Chart(allocationCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Loading...'],
-                datasets: [{
-                    data: [1],
-                    backgroundColor: ['#cccccc'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#1d1d1dff',
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed;
-                                return `${label}: ${value.toFixed(2)}%`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
     }
 
 
